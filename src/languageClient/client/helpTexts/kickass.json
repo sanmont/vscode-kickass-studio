@@ -1,0 +1,46 @@
+{
+  "#define": {
+    "name": "#define (Preprocessor directive)",
+    "descr": "define DEBUG\n\nDefines a preprocessor symbol."
+  },
+
+  "#elif": {
+    "name": "#elif (Preprocessor directive)",
+    "descr": "#elif TEST\n\nThe combination of an #else and an #if preprocessor directive."
+  },
+
+  "#else": {
+    "name": "#else (Preprocessor directive)",
+    "descr": "Used after an #if to start an else block which is executed if the condition is false."
+  },
+
+  "#endif": {
+    "name": "#endif (Preprocessor directive)",
+    "descr": "Marks the end of an #if/#else block."
+  },
+
+  "#if": {
+    "name": "#if (Preprocessor directive)",
+    "descr": "#if !DEBUG\n\nDiscards the sourcecode after the #if-directive if the condition is false."
+  },
+
+  "#import": {
+    "name": "#import (Preprocessor directive)",
+    "descr": "#import \"file2.asm\"\n\n Imports another sourcefile."
+  },
+
+  "#importif": {
+    "name": "#importif (Preprocessor directive)",
+    "descr": "#importif !DEBUG \"file2.asm\"\n\nImports another sourcefile if the given expression is evaluated to true."
+  },
+
+  "#importonce": {
+    "name": "#importonce (Preprocessor directive)",
+    "descr": "Make the assembler skip the current file if it has already been imported."
+  },
+
+  "#undef": {
+    "name": "#undef (Preprocessor directive)",
+    "descr": "Removes the definition of a preprocessor symbol."
+  }
+}

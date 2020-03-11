@@ -1,0 +1,213 @@
+{
+	"name": "kickass-studio",
+	"displayName": "Kick Assembler Debugger",
+	"version": "0.9.9",
+	"publisher": "sanmont",
+	"description": "Kick Assembler debugger extension",
+	"author": {
+		"name": "Santiago Montero",
+		"email": "alvaro.santiago.montero@gmail.com"
+	},
+	"license": "MIT",
+	"keywords": [
+		"c64 assembler kick kickassm"
+	],
+	"engines": {
+		"vscode": "^1.42.0"
+	},
+	"icon": "images/icon.png",
+	"categories": [
+		"Debuggers"
+	],
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sanmont/vscode-kickass-c64-debug.git"
+	},
+	"bugs": {
+		"url": "https://github.com/sanmont/vscode-kickass-c64-debug/issues"
+	},
+	"scripts": {
+		"prepublish": "tsc -p ./src",
+		"compile": "tsc -p ./src",
+		"tslint": "tslint ./src/**/*.ts",
+		"watch": "tsc -w -p ./src",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"package": "vsce package",
+		"publish": "vsce publish",
+		"prettier-watch": "onchange '**/*.js' -- prettier --write {{changed}}"
+	},
+	"dependencies": {
+		"await-notify": "1.0.1",
+		"fast-xml-parser": "3.16.0",
+		"vscode-debugadapter": "^1.39.1",
+		"vscode-languageclient": "^6.1.1",
+		"vscode-languageserver": "5.2.1",
+		"vscode-uri": "^2.1.1"
+	},
+	"devDependencies": {
+		"@types/node": "13.7.4",
+		"prettier": "1.19.1",
+		"tslint": "5.18.0",
+		"tslint-config-prettier": "1.18.0",
+		"tslint-plugin-prettier": "2.1.0",
+		"typescript": "3.7.5",
+		"vsce": "1.66.0",
+		"vscode": "1.1.36"
+	},
+	"main": "./out/extension",
+	"activationEvents": [
+		"onDebug",
+		"onCommand:workbench.action.tasks.runTask",
+		"onLanguage:kickassembler"
+	],
+	"contributes": {
+		"languages": [
+			{
+				"id": "kickassembler",
+				"aliases": [
+					"KickAssembler (C64)",
+					"KickAssembler Studio",
+					"kickassembler"
+				],
+				"extensions": [
+					".asm",
+					".inc",
+					".s",
+					".a",
+					".lib"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "kickassembler",
+				"scopeName": "source.assembly.kickassembler",
+				"path": "./syntaxes/kickassembler.tmLanguage"
+			}
+		],
+		"snippets": [
+			{
+				"language": "kickassembler",
+				"path": "./snippets/snippets.json"
+			}
+		],
+		"breakpoints": [
+			{
+				"language": "kickassembler"
+			}
+		],
+		"debuggers": [
+			{
+				"type": "kickassembler",
+				"label": "Kick assembler studio",
+				"program": "./out/debugAdapter.js",
+				"runtime": "node",
+				"configurationAttributes": {
+					"launch": {
+						"required": [
+							"program"
+						],
+						"properties": {
+							"program": {
+								"type": "string",
+								"description": "Absolute path to entry source file.",
+								"default": "${workspaceFolder}/main.asm"
+							},
+							"binDirectory": {
+								"type": "string",
+								"description": "Absolute path to compiled files and debug files (.prg, .dbg).",
+								"default": "${workspaceFolder}/bin/"
+							},
+							"debuggerType": {
+								"type": "string",
+								"description": "The type of debugger that will be used. Options are vice or C64Debugger,",
+								"default": "vice"
+							},
+							"trace": {
+								"type": "boolean",
+								"description": "Enable logging of the Debug Adapter Protocol.",
+								"default": true
+							}
+						}
+					}
+				}
+			}
+		],
+		"configuration": {
+			"title": "KickAss Studio (C64) Configuration",
+			"properties": {
+				"kickass-studio.kickAssJar": {
+					"type": "string",
+					"default": "",
+					"description": "Full path to KickAss.jar"
+				},
+				"kickass-studio.javaBin": {
+					"type": "string",
+					"default": "java",
+					"description": "Full path to java binary"
+				},
+				"kickass-studio.viceBin": {
+					"type": "string",
+					"default": "x64sc",
+					"description": "Full path to VICE binary"
+				},
+				"kickass-studio.useC64Debugger": {
+					"type": "boolean",
+					"default": true,
+					"description": "Debug and run with C64 Debugger"
+				},
+				"kickass-studio.c64DebuggerBin": {
+					"type": "string",
+					"default": "",
+					"description": "Full path to C64 Debugger binary"
+				},
+				"kickass-studio.outputDir": {
+					"type": "string",
+					"default": "./bin",
+					"description": "The default output directory for the compiled program"
+				}
+			}
+		},
+		"problemMatchers": [
+			{
+				"name": "kickass",
+				"owner": "kickass-studio",
+				"fileLocation": [
+					"absolute"
+				],
+				"pattern": [
+					{
+						"regexp": "^\\s*\\((.*) (\\d+):(\\d+)\\) (.*)$",
+						"file": 1,
+						"line": 2,
+						"column": 3,
+						"message": 4
+					}
+				]
+			},
+			{
+				"name": "kickass.single",
+				"owner": "kickass-studio",
+				"fileLocation": [
+					"relative",
+					"${workspaceFolder}"
+				],
+				"pattern": [
+					{
+						"regexp": "^Error: (.*)$",
+						"message": 1
+					},
+					{
+						"regexp": "^at line (\\d+), column (\\d+) in (.*)",
+						"file": 3,
+						"line": 1,
+						"column": 2,
+						"loop": true
+					}
+				]
+			}
+		]
+	}
+}
