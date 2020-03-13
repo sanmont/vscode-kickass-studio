@@ -3,12 +3,19 @@
 	"rules": {
 		"no-unused-expression": true,
 		"no-duplicate-variable": true,
-		"curly": true,
 		"class-name": true,
-		"semicolon": [ "always" ],
+		"semicolon": true,
 		"triple-equals": true,
 		"no-var-keyword": true,
 		"no-bitwise": true,
-		"prettier": true
+		"ordered-imports": true,
+		"no-require-imports": true,
+		"import-spacing": true,
+		"arrow-return-shorthand": true,
+		"align": true,
+		"quotemark": [
+			true,
+			"single"
+		]
 	}
 }

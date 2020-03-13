@@ -1,25 +1,33 @@
+import { basename } from 'path';
 import {
-	InitializedEvent, TerminatedEvent, Breakpoint, Thread, StoppedEvent, Source, StackFrame, Scope, ContinuedEvent, DebugSession,
+	Breakpoint,
+	ContinuedEvent,
+	DebugSession,
+	InitializedEvent,
+	Scope,
+	Source,
+	StackFrame,
+	StoppedEvent,
+	TerminatedEvent,
+	Thread
 } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { ViceLauncher as ViceLauncher, ViceLauncherEvent } from './vice/viceLauncher';
-import { ViceInitializer } from './vice/viceInitialiazer';
-import { SourceMap, SourceLocation } from './kickass/sourceMap';
 import { changeExtension } from './helpers/pathHelper';
-import { ViceInspector, ViceInspectorEvent, IRegister } from './vice/viceInspector';
-import { basename } from 'path';
-import { getRegistersHex, getRegistersDecimal, getRegistersBinary, getFlags, getTimingVariables } from './helpers/variablesHelper';
+import { getFlags, getRegistersBinary, getRegistersDecimal, getRegistersHex, getTimingVariables } from './helpers/variablesHelper';
+import { SourceLocation, SourceMap } from './kickass/sourceMap';
+import { ViceInitializer } from './vice/viceInitialiazer';
+import { ViceInspector, ViceInspectorEvent } from './vice/viceInspector';
+import { ViceLauncher, ViceLauncherEvent } from './vice/viceLauncher';
 
-const { Subject } = require('await-notify');
+import { Subject } from 'await-notify';
 
 const Scopes = {
-	'Registers' : 1,
+	Registers: 1,
 	'Registers(Decimal)': 2,
 	'Registers(Binary)': 3,
-	'Flags': 4,
-	'Timing': 5
+	Flags: 4,
+	Timing: 5
 };
-
 
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
 	program: string;
@@ -44,7 +52,6 @@ export class KickAssemblerDebugSession extends DebugSession {
 		this.setDebuggerLinesStartAt1(true);
 		this.setDebuggerColumnsStartAt1(true);
 
-
 		this.viceLauncher = new ViceLauncher();
 		this.viceInspector = new ViceInspector();
 
@@ -52,10 +59,9 @@ export class KickAssemblerDebugSession extends DebugSession {
 			this.sendEvent(new TerminatedEvent());
 		});
 
-		this.viceInspector.on(ViceInspectorEvent.stopped,() => {
+		this.viceInspector.on(ViceInspectorEvent.stopped, () => {
 			this.sendEvent(new StoppedEvent('stopped', THREAD_ID));
 		});
-
 	}
 
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
@@ -69,7 +75,6 @@ export class KickAssemblerDebugSession extends DebugSession {
 		this.sendEvent(new InitializedEvent());
 	}
 
-
 	protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
 		super.configurationDoneRequest(response, args);
 		this.configurationDone.notify();
@@ -80,24 +85,25 @@ export class KickAssemblerDebugSession extends DebugSession {
 		const clientLines = args.lines || [];
 
 		const breakpoints = clientLines.map(l => {
-			const {column} = this.sourceMap.getAddressFromSource(path, l) || ({column: undefined});
-			const bp = <DebugProtocol.Breakpoint> new Breakpoint( Boolean(column),l, column );
+			const { column } = this.sourceMap.getAddressFromSource(path, l) || {
+				column: undefined
+			};
+			const bp = <DebugProtocol.Breakpoint>new Breakpoint(Boolean(column), l, column);
 			return bp;
 		});
 
 		response.body = { breakpoints };
 
-		let addresses = breakpoints.filter(p=>p.verified).map((p) => this.sourceMap.getAddressFromSource(path,<number> p.line)?.address);
+		let addresses = breakpoints.filter(p => p.verified).map(p => this.sourceMap.getAddressFromSource(path, <number>p.line)?.address);
 
-		if(!this.viceInitializer.initialized) {
+		if (!this.viceInitializer.initialized) {
 			this.viceInitializer.addBreakpoints(<[]>addresses);
 			this.sendResponse(response);
 		} else {
-			(async () =>  {
+			(async () => {
 				this.viceInspector.flushQueue();
 
-				const createdBps = (await this.viceInspector.getBreakpoints())
-					.filter(ck => this.sourceMap.isFromFilename(ck.address, path));
+				const createdBps = (await this.viceInspector.getBreakpoints()).filter(ck => this.sourceMap.isFromFilename(ck.address, path));
 
 				await this.viceInspector.deleteBreakpoints(createdBps.map(bp => bp.id));
 				let res = await this.viceInspector.setBreakpoints(<[]>addresses);
@@ -116,53 +122,55 @@ export class KickAssemblerDebugSession extends DebugSession {
 
 		await this.configurationDone.wait(1000);
 
-		this.viceInitializer.saveVSFile(changeExtension(args.program, '.vs', args.binDirectory))
+		this.viceInitializer.saveVSFile(changeExtension(args.program, '.vs', args.binDirectory));
 		this.viceInspector.connect();
 		this.viceLauncher.launch(args.program, args.binDirectory);
 		this.sendResponse(response);
 	}
 
-
 	protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
 		response.body = {
-			threads: [
-				new Thread(THREAD_ID, 'Main thread')
-			]
+			threads: [new Thread(THREAD_ID, 'Main thread')]
 		};
 		this.sendResponse(response);
-
 	}
 
 	protected async stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments) {
 		const stack = await this.viceInspector.getStackTrace();
 		const stackLocations = stack.map(add => this.sourceMap.getSourceLocation('$' + add));
-		const stackFrames = <StackFrame[]> stackLocations.map(this.locationToStackFrame.bind(this));
+		const stackFrames = <StackFrame[]>stackLocations.map(this.locationToStackFrame.bind(this));
 		response.body = { stackFrames, totalFrames: stackFrames.length };
 		this.sendResponse(response);
-
 	}
 
-	protected async pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.PauseRequest | undefined){
+	protected async pauseRequest(response: DebugProtocol.PauseResponse, args: DebugProtocol.PauseArguments, request?: DebugProtocol.PauseRequest | undefined) {
 		this.viceInspector.pause();
 		response.success = true;
 
 		this.sendResponse(response);
 	}
 
-	protected async nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments, request?: DebugProtocol.NextRequest | undefined){
+	protected async nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments, request?: DebugProtocol.NextRequest | undefined) {
 		await this.viceInspector.next();
 		response.success = true;
 		this.sendResponse(response);
 	}
 
-	protected async stepInRequest(response: DebugProtocol.StepInResponse, args: DebugProtocol.StepInArguments, request?: DebugProtocol.StepInRequest | undefined){
+	protected async stepInRequest(
+		response: DebugProtocol.StepInResponse,
+		args: DebugProtocol.StepInArguments,
+		request?: DebugProtocol.StepInRequest | undefined
+	) {
 		await this.viceInspector.stepIn();
 		response.success = true;
 		this.sendResponse(response);
 	}
 
-
-	protected async stepOutRequest(response: DebugProtocol.StepOutResponse, args: DebugProtocol.StepOutArguments, request?: DebugProtocol.StepOutRequest | undefined){
+	protected async stepOutRequest(
+		response: DebugProtocol.StepOutResponse,
+		args: DebugProtocol.StepOutArguments,
+		request?: DebugProtocol.StepOutRequest | undefined
+	) {
 		this.sendEvent(new ContinuedEvent(THREAD_ID));
 		await this.viceInspector.stepOut();
 		response.success = true;
@@ -170,12 +178,10 @@ export class KickAssemblerDebugSession extends DebugSession {
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-
-		const scopes = Object.keys(Scopes).map(k=> new Scope(k, Scopes[k]));
+		const scopes = Object.keys(Scopes).map(k => new Scope(k, Scopes[k]));
 		response.body = { scopes };
 		this.sendResponse(response);
 	}
-
 
 	protected async variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments, request?: DebugProtocol.Request) {
 		let variables: DebugProtocol.Variable[] = [];
@@ -194,7 +200,7 @@ export class KickAssemblerDebugSession extends DebugSession {
 				variables = getRegistersBinary(registersVal);
 				break;
 			case 4:
-				variables = getFlags(registersVal)
+				variables = getFlags(registersVal);
 				break;
 			case 5:
 				variables = getTimingVariables(registersVal);
@@ -205,29 +211,26 @@ export class KickAssemblerDebugSession extends DebugSession {
 			variables
 		};
 
-
-		this.setExpressionRequest
-
 		this.sendResponse(response);
 	}
 
 	protected async evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments) {
 		let body;
 
-		switch (args.context){
+		switch (args.context) {
 			case 'watch':
-					try {
-						const res = await this.viceInspector.readMemoryAddress(args.expression);
-						body = {
-							result: res,
-							variablesReference: 0
-						};
-					} catch(e) {
-						response.success = false;
-						response.message = args.expression;
-					}
+				try {
+					const res = await this.viceInspector.readMemoryAddress(args.expression);
+					body = {
+						result: res,
+						variablesReference: 0
+					};
+				} catch (e) {
+					response.success = false;
+					response.message = args.expression;
+				}
 				break;
-			case 'repl':  // debug console
+			case 'repl': // debug console
 				break;
 			case 'hover': // on hovers
 				break;
@@ -248,15 +251,14 @@ export class KickAssemblerDebugSession extends DebugSession {
 		this.sendResponse(response);
 	}
 
-	private locationToStackFrame(location:SourceLocation, index: number): StackFrame {
+	private locationToStackFrame(location: SourceLocation, index: number): StackFrame {
 		const source = this.createSource(location.filename);
 		const line = this.convertDebuggerLineToClient(location.line);
 		const column = this.convertDebuggerColumnToClient(location.column);
-		return new StackFrame(index,location.address, source, line, column);
+		return new StackFrame(index, location.address, source, line, column);
 	}
 
 	private createSource(filePath: string): Source {
 		return new Source(basename(filePath), this.convertDebuggerPathToClient(filePath), undefined, undefined, 'kickass-adapter-data');
 	}
-
 }
