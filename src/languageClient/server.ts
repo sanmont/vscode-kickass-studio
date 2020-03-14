@@ -1,7 +1,9 @@
 'use strict';
 
 import { spawn } from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
+import * as uniqueFilename from 'unique-filename';
 import {
 	createConnection,
 	Diagnostic,
@@ -13,20 +15,19 @@ import {
 } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 
-const kickassRunnerJar = path.join(__dirname, 'KickAssRunner.jar');
+// const problemMatcher =
 
-const defaultSettings = { kickAssJar: '/Applications/KickAssembler/KickAss.jar', javaBin: 'java' };
-let globalSettings = defaultSettings;
+
 const documentSettings = new Map();
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments();
+let globalSettings = {};
 
 let hasConfigurationCapability = false;
 
 connection.onInitialize(({ capabilities }) => {
 	hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration);
-
 	return {
 		capabilities: {
 			textDocumentSync: documents.syncKind
@@ -48,7 +49,7 @@ connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
 		documentSettings.clear();
 	} else {
-		globalSettings = change.settings['kickass-studio'] || defaultSettings;
+		globalSettings = change.settings['kickass-studio'];
 	}
 
 	documents.all().forEach(validateDocument);
@@ -77,26 +78,30 @@ async function validateDocument(document) {
 async function getErrors(document): Promise<Diagnostic[]> {
 	const settings = await getDocumentSettings(document.uri);
 	const fileName = URI.parse(document.uri).fsPath;
+	const cwd = path.dirname(fileName);
+
+	// tslint:disable-next-line: no-require-imports
+	const errorFilename = uniqueFilename(require('os').tmpdir());
+
 
 	const asmInfo: string = await new Promise(resolve => {
 		let output = '';
 
 		const proc = spawn(
 			settings.javaBin,
-			['-cp', `${settings.kickAssJar}:${kickassRunnerJar}`, 'com.noice.kickass.KickAssRunner', fileName, '-asminfo', 'errors', '-asminfo', 'files'],
-			{ cwd: path.dirname(fileName) }
+			['-jar',settings.kickAssJar, fileName, '-asminfo', 'errors|files', '-noeval','-asminfofile', errorFilename],
+			{ cwd }
 		);
 
-		proc.stdout.on('data', data => {
+		proc.stderr.on('data', data => {
 			output += data;
 		});
 
 		proc.on('close', () => {
+			output = fs.readFileSync(errorFilename).toString();
+			fs.unlinkSync(errorFilename);
 			resolve(output);
 		});
-
-		proc.stdin.write(document.getText());
-		proc.stdin.end();
 	});
 
 	const filesIndex = asmInfo.indexOf('[files]');

@@ -20,6 +20,14 @@
 			"problemMatcher": [
 				"$eslint-stylish"
 			]
+		},
+		{
+			"type": "npm",
+			"script": "compile",
+			"problemMatcher": [
+				"$eslint-compact"
+			],
+			"group": "build"
 		}
 	]
 }

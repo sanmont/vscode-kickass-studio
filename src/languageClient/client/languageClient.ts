@@ -1,5 +1,4 @@
 'use strict';
-
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient';
@@ -7,7 +6,7 @@ import { LanguageClient, TransportKind } from 'vscode-languageclient';
 
 export const create = (context) => {
 	const server = {
-		module: context.asAbsolutePath(path.join('out', 'languageClient','server', 'server.js')),
+		module: context.asAbsolutePath(path.join('out', 'languageClient', 'server.js')),
 		transport: TransportKind.ipc
 	};
 
