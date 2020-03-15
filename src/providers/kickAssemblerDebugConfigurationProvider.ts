@@ -1,8 +1,8 @@
-import * as vscode from 'vscode';
 import * as path from 'path';
-import { WorkspaceFolder, DebugConfiguration, ProviderResult, CancellationToken } from 'vscode';
-import { getConfig, getBuildTaskName } from '../helpers/extension';
-import { canBeLaunched, isJSONFile, instantiateJSONfileObject } from '../helpers/pathHelper';
+import * as vscode from 'vscode';
+import { CancellationToken, DebugConfiguration, ProviderResult, WorkspaceFolder } from 'vscode';
+import { getBuildTaskName, getConfig } from '../helpers/extension';
+import { canBeLaunched, instantiateJSONfileObject, isJSONFile } from '../helpers/pathHelper';
 
 
 const defaultLaunch = (absFile) => {
@@ -18,7 +18,7 @@ const defaultLaunch = (absFile) => {
 			'binDirectory': path.join('${workspaceFolder}', config.outputDir),
 			'preLaunchTask': getBuildTaskName(absFile)
 		});
-}
+};
 
 
 const createLaunchConfig = (config ) => {

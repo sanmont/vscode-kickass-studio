@@ -1,8 +1,8 @@
-import * as vscode from 'vscode';
-import { Task, CancellationToken, ProviderResult } from 'vscode';
 import * as path from 'path';
-import { canBeLaunched, isJSONFile, instantiateJSONfileObject } from '../helpers/pathHelper';
-import { getConfig, getBuildTaskName } from '../helpers/extension';
+import * as vscode from 'vscode';
+import { CancellationToken, ProviderResult, Task } from 'vscode';
+import { getBuildTaskName, getConfig } from '../helpers/extension';
+import { canBeLaunched, instantiateJSONfileObject, isJSONFile } from '../helpers/pathHelper';
 
 
 const createBuildTask = (f: string, name?) => {
@@ -36,7 +36,7 @@ const createBuildTask = (f: string, name?) => {
 	task.definition = definition;
 
 	return task;
-}
+};
 
 export class KickAssemblerTaskProvider implements vscode.TaskProvider {
 		provideTasks(token?: CancellationToken): ProviderResult<Task[]> {
