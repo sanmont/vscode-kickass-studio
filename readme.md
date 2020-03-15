@@ -8,7 +8,7 @@ Support for debugging using vice, hover text showing contextual help, on the fly
 ## Features
 
 ### Contextual help
-(GIF)
+![test](https://user-images.githubusercontent.com/35506206/76687921-3442c880-6620-11ea-970e-11da9f0aa085.gif)
 
 ### Error evaluation
 (GIF)
