@@ -2,8 +2,10 @@
 
 import { spawn } from 'child_process';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as uniqueFilename from 'unique-filename';
+import { TextDocument, TextDocumentChangeEvent } from 'vscode-languageclient';
 import {
 	createConnection,
 	Diagnostic,
@@ -41,7 +43,7 @@ connection.onInitialized(() => {
 	}
 });
 
-documents.onDidChangeContent(change => {
+documents.onDidChangeContent((change: TextDocumentChangeEvent) => {
 	validateDocument(change.document);
 });
 
@@ -70,26 +72,27 @@ function getDocumentSettings(resource) {
 	return result;
 }
 
-async function validateDocument(document) {
+async function validateDocument(document: TextDocument) {
 	const errors: Diagnostic[] = await getErrors(document);
 	connection.sendDiagnostics({ uri: document.uri, diagnostics: errors || [] });
 }
 
-async function getErrors(document): Promise<Diagnostic[]> {
+async function getErrors(document:  TextDocument): Promise<Diagnostic[]> {
 	const settings = await getDocumentSettings(document.uri);
 	const fileName = URI.parse(document.uri).fsPath;
 	const cwd = path.dirname(fileName);
 
 	// tslint:disable-next-line: no-require-imports
-	const errorFilename = uniqueFilename(require('os').tmpdir());
-
+	const errorFilename = uniqueFilename(os.tmpdir());
+	const tempFile = uniqueFilename(os.tmpdir());
+	fs.writeFileSync(tempFile, document.getText());
 
 	const asmInfo: string = await new Promise(resolve => {
 		let output = '';
 
 		const proc = spawn(
 			settings.javaBin,
-			['-jar',settings.kickAssJar, fileName, '-asminfo', 'errors|files', '-noeval','-asminfofile', errorFilename],
+			['-jar',settings.kickAssJar, fileName, '-replacefile', fileName, tempFile, '-asminfo', 'errors|files', '-noeval','-asminfofile', errorFilename],
 			{ cwd }
 		);
 
@@ -100,6 +103,7 @@ async function getErrors(document): Promise<Diagnostic[]> {
 		proc.on('close', () => {
 			output = fs.readFileSync(errorFilename).toString();
 			fs.unlinkSync(errorFilename);
+			fs.unlinkSync(tempFile)
 			resolve(output);
 		});
 	});
