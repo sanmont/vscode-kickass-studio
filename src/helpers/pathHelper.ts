@@ -1,12 +1,17 @@
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
+
+const oneLineCommentsRE = /\/\/.*/gi;
+const multiLineCommentsRE = /\/\*.*\*\//gms;
+
+export const eraseComments = (text) => text.replace(multiLineCommentsRE, '').replace(oneLineCommentsRE,'');
 
 export const changeExtension = (filename, extension, directory='') => {
 	const fileObj = path.parse(filename);
 	fileObj.base = fileObj.name + extension;
-	fileObj.dir = directory
+	fileObj.dir = directory;
 	if (directory === '') {
-		fileObj.root = ''
+		fileObj.root = '';
 	}
 
 	return path.format(fileObj);
@@ -14,7 +19,7 @@ export const changeExtension = (filename, extension, directory='') => {
 
 const flatten = (arr:[][]): any[] => {
 	return arr.reduce((flat, curr) => flat.concat(curr) , []);
-}
+};
 
 export const getAllFilesByExtension = (ext, dir) => {
 	const files = (<string[]> fs.readdirSync(dir,'')).map(f => path.join(dir, f));
@@ -23,10 +28,6 @@ export const getAllFilesByExtension = (ext, dir) => {
 	return filesWithExt.concat(flatten(subfiles));
 };
 
-const oneLineCommentsRE = /\/\/.*/gi
-const multiLineCommentsRE = /\/\*.*\*\//gms
-
-const eraseComments = (text) => text.replace(multiLineCommentsRE, '').replace(oneLineCommentsRE,'');
 
 export const canBeLaunched = (f) => {
 	const contents = fs.readFileSync(f, 'utf8');
@@ -36,7 +37,7 @@ export const canBeLaunched = (f) => {
 export const instantiateJSONfileObject = (f) => {
 	const json = fs.readFileSync(f, 'utf8');
 	return JSON.parse(eraseComments(json));
-}
+};
 
 export const isJSONFile = (f: string): boolean => path.extname(f) === '.json';
 

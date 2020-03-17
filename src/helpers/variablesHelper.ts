@@ -1,9 +1,5 @@
-import { IRegister } from '../vice/viceInspector';
 import { DebugProtocol } from 'vscode-debugprotocol';
-
-const varConvertValue = (val) => {
-
-}
+import { IRegister } from '../vice/viceInspector';
 
 const registersNames = ['A', 'X', 'Y', 'SP'];
 
@@ -34,19 +30,19 @@ const filterRegisters = (registers: IRegister[], type: string, formatter:(val) =
 
 export const getRegistersHex = (registers: IRegister[]) => {
 	return filterRegisters(registers, 'hex', toHex);
-}
+};
 
 export const getRegistersDecimal = (registers: IRegister[]) => {
 	const regs = filterRegisters(registers, 'integer', toDecimal);
 	regs.pop();
 	return regs;
-}
+};
 
 export const getRegistersBinary = (registers: IRegister[]) => {
 	const regs = filterRegisters(registers, 'binary', toBinary);
 	regs.pop();
 	return regs;
-}
+};
 
 
 const FlagsRegister = 'NV-BDIZC';
@@ -60,7 +56,7 @@ const Flags = {
 	'Z': 'Zero',
 	'C': 'Carry',
 	'-': '-'
-}
+};
 
 export const getFlags = (registers: IRegister[]): DebugProtocol.Variable[]  => {
 	const flags = <IRegister> registers.find( r => r.name === FlagsRegister);
@@ -74,15 +70,14 @@ export const getFlags = (registers: IRegister[]): DebugProtocol.Variable[]  => {
 			variablesReference: 0
 		}))
 		.sort(sortArr(Object.values(Flags)));
-}
-
+};
 
 
 const TimingRegisters = {
 	'LIN': 'Raster Line',
 	'CYC': 'Cycle',
 	'STOPWATCH': 'Stop Watch'
-}
+};
 
 export const getTimingVariables =  (registers: IRegister[]): DebugProtocol.Variable[]  => {
 	const timingNames = Object.keys(TimingRegisters);

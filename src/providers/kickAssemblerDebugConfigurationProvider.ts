@@ -1,13 +1,16 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken, DebugConfiguration, ProviderResult, WorkspaceFolder } from 'vscode';
-import { getBuildTaskName, getConfig } from '../helpers/extension';
-import { canBeLaunched, instantiateJSONfileObject, isJSONFile } from '../helpers/pathHelper';
+import {  getConfig } from '../helpers/extension';
+import { canBeLaunched, getAllFilesByExtension } from '../helpers/pathHelper';
+import { createTaskFileByDebugConfig, getBuildTaskName, hasTaskFile } from '../helpers/tasksHelper';
 
 
-const defaultLaunch = (absFile) => {
+const createDebugLaunchConfig = (absFile) => {
 	const config = getConfig();
 	let cwd = vscode.workspace.rootPath;
+
 	let relativeFile = path.relative(<string> cwd , <string>absFile);
 
 	return 	({
@@ -20,39 +23,49 @@ const defaultLaunch = (absFile) => {
 		});
 };
 
+const debugLaunchFileName = () =>  path.join(vscode.workspace.rootPath || '','.vscode/launch.json');
 
-const createLaunchConfig = (config ) => {
-	let cwd = vscode.workspace.rootPath || '';
+export const hasDebugLaunchFile = (): boolean => fs.existsSync(debugLaunchFileName());
 
-	let activeFile = vscode.window.activeTextEditor?.document.fileName;
+const createDebugLaunchFile = (config) => {
+	const taskFileContent = {
+		'version': '2.0.0',
+		'configurations': [config]
+	};
 
-	if (canBeLaunched(activeFile)) {
-		config = defaultLaunch(activeFile);
+	const debugLaunchFileName_  = debugLaunchFileName();
+
+	if (!fs.existsSync(path.dirname(debugLaunchFileName_))){
+		fs.mkdirSync(path.dirname(debugLaunchFileName_));
 	}
 
-	if (isJSONFile(<string>activeFile)) {
-		const task = instantiateJSONfileObject(activeFile);
-		let buildConfig = (<[]>task.tasks || []).filter(launchConfig =>
-			(<string>((<any>launchConfig).label || '')).startsWith(getBuildTaskName()));
-
-		if (buildConfig.length) {
-			const label:string =  (<any>buildConfig[0]).label;
-			const fileName: string = path.join(cwd, label.replace(getBuildTaskName(), ''));
-			config = defaultLaunch(fileName);
-		}
-	}
-
-	return config;
+	fs.writeFileSync(debugLaunchFileName_, JSON.stringify(taskFileContent, null, '\t'),  { flag: 'w'});
 };
+
 
 export class KickAssemblerDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
 
     async provideDebugConfigurations(folder: vscode.WorkspaceFolder | undefined, token?: vscode.CancellationToken): Promise<vscode.DebugConfiguration[]> {
-		let config = createLaunchConfig(null);
-		return config? [config] : [];
+		return getAllFilesByExtension('.asm', folder?.uri.fsPath).filter(canBeLaunched).map(createDebugLaunchConfig);
 	}
 
-	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, config: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-		return createLaunchConfig(config);
+
+	// Esto se lanza siempre cuando existe el launch.json, el config viene configurado con eso.
+	resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+		const activeFile = vscode.window.activeTextEditor?.document.fileName;
+
+		if (!debugConfig.name && canBeLaunched(activeFile)) {
+			debugConfig = createDebugLaunchConfig(activeFile);
+		}
+
+		if (!hasTaskFile()){
+			createTaskFileByDebugConfig(debugConfig);
+		}
+
+		if (!hasDebugLaunchFile()) {
+			createDebugLaunchFile(debugConfig);
+		}
+
+		return debugConfig;
 	}
 }

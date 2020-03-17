@@ -1,6 +1,5 @@
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { EventEmitter } from 'events';
-import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
-import { ViceInspector } from './viceInspector';
 import { changeExtension } from '../helpers/pathHelper';
 
 
@@ -10,22 +9,12 @@ export const ViceLauncherEvent = {
 
 export class ViceLauncher extends EventEmitter {
 	private viceProcess: ChildProcessWithoutNullStreams;
-	/**
-	 * Start executing the given program.
-	 */
-	public launch(program: string, cwd: string) {
-		console.log('deberia lanzar: ' + program);
 
+	public launch(program: string, cwd: string) {
 		const args = ['-remotemonitor', '-logfile', changeExtension(program, '-vice.log') ,
-		//const args = ['-logfile', changeExtension(program, '-vice.log') ,
 			'-moncommands',  changeExtension(program, '.vs'),
 			changeExtension(program, '.prg')
 		];
-
-		console.log('hey');
-		console.log('los args son');
-		console.log(args);
-		console.log(cwd);
 
 		this.viceProcess = spawn('x64sc',args, {cwd});
 
@@ -37,7 +26,7 @@ export class ViceLauncher extends EventEmitter {
 			console.error(`stderr: ${data}`);
 		});
 
-		this.viceProcess.on('close', (code) => this.sendEvent(ViceLauncherEvent.closed))
+		this.viceProcess.on('close', (code) => this.sendEvent(ViceLauncherEvent.closed));
 	}
 
 	public close() {

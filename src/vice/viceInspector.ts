@@ -33,12 +33,12 @@ export const ViceInspectorEvent = {
 
 
 const stoppedOnBreakRE = /\#(\d+)\s\(Stop\son\s+exec\s+([0-f]{4})/i;
-const readyRE =  /^\([0-f]{4}\)$/i
+const readyRE =  /^\([0-f]{4}\)$/i;
 const stackTraceRE = /([0-f]{4})/gi;
 
-const checkpointRe = /(BREAK|TRACE|WATCH)\:\s+(\d+)\s+C\:(\$[0-f]{4})/gi
+const checkpointRe = /(BREAK|TRACE|WATCH)\:\s+(\d+)\s+C\:(\$[0-f]{4})/gi;
 
-const memValRE = />C:[0-f]{4}\s+([0-f]{2})/gi
+const memValRE = />C:[0-f]{4}\s+([0-f]{2})/gi;
 
 export class ViceInspector extends EventEmitter {
 	private socket: WaitingSocket = new WaitingSocket();
@@ -122,7 +122,7 @@ export class ViceInspector extends EventEmitter {
 		const checkPoints:Checkpoint[] = [];
 		let item: RegExpExecArray | null = null;
 		while(item = checkpointRe.exec(checkpointsStr)) {
-			checkPoints.push({ type: item[1], id: item[2], address: item[3] })
+			checkPoints.push({ type: item[1], id: item[2], address: item[3] });
 		}
 
 		return checkPoints;

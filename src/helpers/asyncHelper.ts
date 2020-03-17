@@ -1,4 +1,4 @@
-const { Subject } = require('await-notify');
+import { Subject } from 'await-notify';
 
 export const delay = timeout => new Promise(resolve => setTimeout(resolve, timeout));
 

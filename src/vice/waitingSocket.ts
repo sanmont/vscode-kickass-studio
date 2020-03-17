@@ -1,5 +1,5 @@
-import { Socket } from 'net';
 import { debounce } from 'lodash';
+import { Socket } from 'net';
 
 const delay = timeout => new Promise(resolve => setTimeout(resolve, timeout));
 const WaitRetry = 500;
