@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { CancellationToken, DebugConfiguration, ProviderResult, Task } from 'vscode';
-import { canBeLaunched } from '../helpers/pathHelper';
+import { canBeLaunched, getAllFilesByExtension } from '../helpers/pathHelper';
 import { createBuildTask } from '../helpers/tasksHelper';
 
 export class KickAssemblerTaskProvider implements vscode.TaskProvider {
@@ -11,15 +11,7 @@ export class KickAssemblerTaskProvider implements vscode.TaskProvider {
 				return emptyTasks;
 			}
 
-			const activeFile = vscode.window.activeTextEditor?.document.fileName;
-
-			let tasks: Task[] = [];
-
-			if (canBeLaunched(activeFile)) {
-				tasks = [createBuildTask(<string>activeFile)];
-			}
-
-			return tasks;
+			return getAllFilesByExtension('.asm', workspaceRoot).filter(canBeLaunched).map(createBuildTask);
 		}
 
 		resolveTask(task: Task, token?: CancellationToken): ProviderResult<Task> {
