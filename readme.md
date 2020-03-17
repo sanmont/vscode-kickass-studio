@@ -25,8 +25,11 @@ Support for debugging using vice, hover text showing contextual help, on the fly
 ## Configuration options
 
 ## Credits
+
 Santiago Montero
+
 https://github.com/sanmont
+
 https://twitter.com/sanmonterodev
 
 Special thanks to Captain JiNX for his great vscode-kickass extension which code was partially used to develop this extension.
