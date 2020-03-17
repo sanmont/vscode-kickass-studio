@@ -10,8 +10,8 @@ Support for debugging using vice, hover text showing contextual help, on the fly
 ### Contextual help
 ![test](https://user-images.githubusercontent.com/35506206/76687921-3442c880-6620-11ea-970e-11da9f0aa085.gif)
 
-### Error evaluation
-(GIF)
+### On the fly error evaluation
+![onflyerrors](https://user-images.githubusercontent.com/35506206/76908128-e805bb80-689f-11ea-88bb-140e626399ad.gif)
 
 ### Automatic tasks generation
 (GIF)
