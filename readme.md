@@ -29,7 +29,7 @@ Santiago Montero
 https://github.com/sanmont
 https://twitter.com/sanmonterodev
 
-Special thanks to Captain JiNX for his great vscode-kickass extension which code was partially use to develop this extension.
+Special thanks to Captain JiNX for his great vscode-kickass extension which code was partially used to develop this extension.
 (Used under MIT license)
 
 Check out his awesome extension! 
