@@ -14,12 +14,9 @@ Support for debugging using vice, hover text showing contextual help, on the fly
 ![onflyerrors](https://user-images.githubusercontent.com/35506206/76908128-e805bb80-689f-11ea-88bb-140e626399ad.gif)
 
 ### Automatic tasks generation
-(GIF)
+![taskgeneration](https://user-images.githubusercontent.com/35506206/77233973-07079480-6ba3-11ea-8c75-89c292cfeb8f.gif)
 
 ### Vice Debugger
-(GIF)
-
-### C64 Debugger
 (GIF)
 
 ## Configuration options
