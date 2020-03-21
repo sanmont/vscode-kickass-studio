@@ -1,7 +1,7 @@
 {
 	"name": "kickass-studio",
 	"displayName": "Kick Assembler Studio",
-	"version": "0.9.9",
+	"version": "1.0.0",
 	"publisher": "sanmont",
 	"description": "Kick Assembler visual studio code extension for creating and debugging C64 projects",
 	"author": {
@@ -17,6 +17,7 @@
 	},
 	"icon": "images/icon.png",
 	"categories": [
+		"Programming Languages",
 		"Debuggers"
 	],
 	"private": true,
