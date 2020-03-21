@@ -34,4 +34,4 @@ Special thanks to Captain JiNX for his great vscode-kickass extension which code
 
 Check out his awesome extension! 
 
-https://github.com/CaptainJiNX/vscod-kickass-c64
+https://github.com/CaptainJiNX/vscode-kickass-c64
