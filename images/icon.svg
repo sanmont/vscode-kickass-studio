@@ -15,7 +15,7 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-   sodipodi:docname="kickassstudio2.svg"
+   sodipodi:docname="icon.svg"
    enable-background="new">
   <defs
      id="defs2">
@@ -118,10 +118,10 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.49497475"
-     inkscape:cx="630.33775"
-     inkscape:cy="459.01715"
+     inkscape:cx="358.60672"
+     inkscape:cy="454.97654"
      inkscape:document-units="mm"
-     inkscape:current-layer="g247"
+     inkscape:current-layer="layer2"
      showgrid="false"
      units="px"
      inkscape:pagecheckerboard="true"
@@ -147,17 +147,16 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="Capa 2"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <rect
-       style="fill:#64574b;fill-opacity:1;stroke-width:1.51294112"
+       style="fill:#64574b;fill-opacity:1;stroke-width:1.89471436"
        id="rect100"
-       width="211.27142"
-       height="211.27142"
-       x="25.891172"
-       y="23.11862"
-       rx="28.590958"
-       ry="28.590958" />
+       width="264.58334"
+       height="264.58334"
+       x="-3.5527137e-15"
+       y="-1.2715657e-06"
+       rx="35.805557"
+       ry="35.805557" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -166,7 +165,7 @@
      style="display:inline;filter:url(#filter870)">
     <g
        aria-label="K"
-       transform="matrix(6.309201,0,0,5.1825651,-832.48678,-93.918201)"
+       transform="matrix(7.9012552,0,0,6.4903257,-1074.9797,-146.56971)"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32.69923019px;line-height:1.25;font-family:AlYarmook;-inkscape-font-specification:AlYarmook;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:0.86956518;stroke:none;stroke-width:0.81748068"
        id="text31">
       <path
@@ -184,7 +183,7 @@
     <g
        style="display:inline"
        id="g247"
-       transform="matrix(5.718203,0,0,5.718203,-850.82642,-144.35214)"
+       transform="matrix(7.1611257,0,0,7.1611257,-1097.9472,-209.73008)"
        mask="url(#mask52)">
       <path
          d="m 157.18334,46.910873 h 27.84556 v 1.082675 h -27.84556 v -1.082675"

@@ -1,16 +1,16 @@
 {
 	"name": "kickass-studio",
-	"displayName": "Kick Assembler Debugger",
+	"displayName": "Kick Assembler Studio",
 	"version": "0.9.9",
 	"publisher": "sanmont",
-	"description": "Kick Assembler debugger extension",
+	"description": "Kick Assembler visual studio code extension for creating and debugging C64 projects",
 	"author": {
 		"name": "Santiago Montero",
 		"email": "alvaro.santiago.montero@gmail.com"
 	},
 	"license": "MIT",
 	"keywords": [
-		"c64 assembler kick kickassm"
+		"c64 assembler kick kickassm kickasss studio"
 	],
 	"engines": {
 		"vscode": "^1.42.0"
@@ -127,7 +127,7 @@
 			}
 		],
 		"configuration": {
-			"title": "KickAss Studio (C64) Configuration",
+			"title": "Kick assembler studio configuration",
 			"properties": {
 				"kickass-studio.kickAssJar": {
 					"type": "string",
