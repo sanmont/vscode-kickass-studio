@@ -20,6 +20,10 @@ Support for debugging using vice, hover text showing contextual help, on the fly
 ![vice debugger](https://user-images.githubusercontent.com/35506206/77234972-22c26900-6baa-11ea-9bec-050480c9376d.gif)
 
 ## Configuration options
+- `kickass-studio.kickAssJar`: "Full path to KickAss.jar"
+- `kickass-studio.javaBin`: "Full path to java binary"
+- `kickass-studio.viceBin`: "Full path to VICE binary"
+- `kickass-studio.outputDir`: "The default output directory for the compiled program"
 
 ## Credits
 
