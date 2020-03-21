@@ -17,7 +17,7 @@ Support for debugging using vice, hover text showing contextual help, on the fly
 ![taskgeneration](https://user-images.githubusercontent.com/35506206/77233973-07079480-6ba3-11ea-8c75-89c292cfeb8f.gif)
 
 ### Vice Debugger
-(GIF)
+![vice debugger](https://user-images.githubusercontent.com/35506206/77234972-22c26900-6baa-11ea-9bec-050480c9376d.gif)
 
 ## Configuration options
 
