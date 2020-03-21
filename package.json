@@ -120,16 +120,6 @@
 								"type": "string",
 								"description": "Absolute path to compiled files and debug files (.prg, .dbg).",
 								"default": "${workspaceFolder}/bin/"
-							},
-							"debuggerType": {
-								"type": "string",
-								"description": "The type of debugger that will be used. Options are vice or C64Debugger,",
-								"default": "vice"
-							},
-							"trace": {
-								"type": "boolean",
-								"description": "Enable logging of the Debug Adapter Protocol.",
-								"default": true
 							}
 						}
 					}
@@ -153,16 +143,6 @@
 					"type": "string",
 					"default": "x64sc",
 					"description": "Full path to VICE binary"
-				},
-				"kickass-studio.useC64Debugger": {
-					"type": "boolean",
-					"default": true,
-					"description": "Debug and run with C64 Debugger"
-				},
-				"kickass-studio.c64DebuggerBin": {
-					"type": "string",
-					"default": "",
-					"description": "Full path to C64 Debugger binary"
 				},
 				"kickass-studio.outputDir": {
 					"type": "string",
