@@ -13,11 +13,10 @@ import {
 	DidChangeConfigurationNotification,
 	Position,
 	ProposedFeatures,
-	TextDocuments
+	TextDocuments,
+	TextDocumentPositionParams
 } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-
-// const problemMatcher =
 
 
 const documentSettings = new Map();
@@ -36,6 +35,14 @@ connection.onInitialize(({ capabilities }) => {
 		}
 	};
 });
+
+connection.onImplementation((postParams: TextDocumentPositionParams) => {
+	console.log(postParams.position);
+	return null;
+});
+
+// connection.onReferences()
+
 
 connection.onInitialized(() => {
 	if (hasConfigurationCapability) {
@@ -69,8 +76,10 @@ function getDocumentSettings(resource) {
 		documentSettings.set(resource, result);
 	}
 
+
 	return result;
 }
+
 
 async function validateDocument(document: TextDocument) {
 	const errors: Diagnostic[] = await getErrors(document);
@@ -79,6 +88,11 @@ async function validateDocument(document: TextDocument) {
 
 async function getErrors(document:  TextDocument): Promise<Diagnostic[]> {
 	const settings = await getDocumentSettings(document.uri);
+
+	if (!fs.existsSync(settings.kickAssJar)) {
+		return [];
+	}
+
 	const fileName = URI.parse(document.uri).fsPath;
 	const cwd = path.dirname(fileName);
 
@@ -89,7 +103,6 @@ async function getErrors(document:  TextDocument): Promise<Diagnostic[]> {
 
 	const asmInfo: string = await new Promise(resolve => {
 		let output = '';
-
 		const proc = spawn(
 			settings.javaBin,
 			['-jar',settings.kickAssJar, fileName, '-replacefile', fileName, tempFile, '-asminfo', 'errors|files', '-noeval','-asminfofile', errorFilename],
@@ -106,6 +119,8 @@ async function getErrors(document:  TextDocument): Promise<Diagnostic[]> {
 			fs.unlinkSync(tempFile)
 			resolve(output);
 		});
+
+
 	});
 
 	const filesIndex = asmInfo.indexOf('[files]');

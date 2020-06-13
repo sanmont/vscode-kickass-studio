@@ -7,8 +7,15 @@ import * as hoverProvider from './languageClient/client/helpTexts/hoverProvider'
 import * as LanguageClient from './languageClient/client/languageClient';
 import { KickAssemblerDebugConfigurationProvider } from './providers/kickAssemblerDebugConfigurationProvider';
 import { KickAssemblerTaskProvider } from './providers/kickAssemblerTaskProvider';
+import { getConfig } from './helpers/extension';
+import { existsSync } from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
+	const config  = getConfig();
+	if(!existsSync(config.kickAssJar)) {
+		vscode.window.showErrorMessage("Kick Assembler not found. Check the extension configuration.");
+	}
+
 	const client = LanguageClient.create(context);
 	client.start();
 

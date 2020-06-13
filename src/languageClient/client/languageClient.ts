@@ -14,7 +14,7 @@ export const create = (context) => {
 		run: server,
 		debug: {
 			...server,
-			options: { execArgv: ['--nolazy', '--inspect=6009'] }
+			options: { execArgv: ['--nolazy', '--inspect=3000'] }
 		}
 	};
 
