@@ -1,25 +1,21 @@
 'use strict';
 
-import { spawn } from 'child_process';
 import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
-import * as uniqueFilename from 'unique-filename';
-import { TextDocument, TextDocumentChangeEvent } from 'vscode-languageclient';
+
+import { TextDocument, TextDocumentChangeEvent, Range, Location, DocumentUri } from 'vscode-languageclient';
 import {
 	createConnection,
 	Diagnostic,
 	DiagnosticSeverity,
 	DidChangeConfigurationNotification,
-	Position,
 	ProposedFeatures,
 	TextDocuments,
-	TextDocumentPositionParams
 } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-
+import { ASMInfoAnalizer, ASMInfoError } from './kickassASMInfo';
 
 const documentSettings = new Map();
+
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments();
@@ -27,27 +23,40 @@ let globalSettings = {};
 
 let hasConfigurationCapability = false;
 
+const ASMAnalizer = new ASMInfoAnalizer();
+
 connection.onInitialize(({ capabilities }) => {
+	console.log("on initialize");
+
+
 	hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration);
 	return {
 		capabilities: {
-			textDocumentSync: documents.syncKind
+			textDocumentSync: documents.syncKind,
+			definitionProvider: true
 		}
 	};
 });
 
-connection.onImplementation((postParams: TextDocumentPositionParams) => {
-	console.log(postParams.position);
+connection.onDefinition(( {textDocument, position}) => {
+	const word = ASMAnalizer.getWord(textDocument.uri, position);
+	if (!word) return null;
+	const location = ASMAnalizer.getLabel(word);
+
+	if (location) {
+		return {uri: 'file://' + location.uri, range: location.range}
+	}
 	return null;
 });
-
-// connection.onReferences()
-
 
 connection.onInitialized(() => {
 	if (hasConfigurationCapability) {
 		connection.client.register(DidChangeConfigurationNotification.type);
 	}
+});
+
+documents.onDidOpen((change: TextDocumentChangeEvent) => {
+	validateDocument(change.document);
 });
 
 documents.onDidChangeContent((change: TextDocumentChangeEvent) => {
@@ -76,103 +85,31 @@ function getDocumentSettings(resource) {
 		documentSettings.set(resource, result);
 	}
 
-
 	return result;
 }
 
 
 async function validateDocument(document: TextDocument) {
-	const errors: Diagnostic[] = await getErrors(document);
-	connection.sendDiagnostics({ uri: document.uri, diagnostics: errors || [] });
-}
 
-async function getErrors(document:  TextDocument): Promise<Diagnostic[]> {
 	const settings = await getDocumentSettings(document.uri);
 
-	if (!fs.existsSync(settings.kickAssJar)) {
-		return [];
-	}
+	await ASMAnalizer.analize(document, settings);
 
+	const errors = ASMAnalizer.getErrors();
 	const fileName = URI.parse(document.uri).fsPath;
-	const cwd = path.dirname(fileName);
 
-	// tslint:disable-next-line: no-require-imports
-	const errorFilename = uniqueFilename(os.tmpdir());
-	const tempFile = uniqueFilename(os.tmpdir());
-	fs.writeFileSync(tempFile, document.getText());
+	connection.sendDiagnostics({ uri: document.uri, diagnostics: toDiagnosticErrors(fileName, errors) });
+}
 
-	const asmInfo: string = await new Promise(resolve => {
-		let output = '';
-		const proc = spawn(
-			settings.javaBin,
-			['-jar',settings.kickAssJar, fileName, '-replacefile', fileName, tempFile, '-asminfo', 'errors|files', '-noeval','-asminfofile', errorFilename],
-			{ cwd }
-		);
-
-		proc.stderr.on('data', data => {
-			output += data;
-		});
-
-		proc.on('close', () => {
-			output = fs.readFileSync(errorFilename).toString();
-			fs.unlinkSync(errorFilename);
-			fs.unlinkSync(tempFile)
-			resolve(output);
-		});
-
-
-	});
-
-	const filesIndex = asmInfo.indexOf('[files]');
-	const errorsIndex = asmInfo.indexOf('[errors]');
-	const filesPart = asmInfo.substring(filesIndex, errorsIndex > filesIndex ? errorsIndex : undefined);
-	const errorsPart = asmInfo.substring(errorsIndex, filesIndex > errorsIndex ? filesIndex : undefined);
-
-	const currentFileNumber = filesPart
-		.split('\n')
-		.slice(1)
-		.map(line => {
-			const [number, file] = line.split(';');
-			return { number, file };
-		})
-		.filter(({ file }) => file === fileName)
-		.map(({ number }) => Number(number))[0];
-
-	const errors = <Diagnostic[]>errorsPart
-		.split('\n')
-		.slice(1)
-		.map(parseLine)
-		.filter(({ fileNumber }) => fileNumber === currentFileNumber)
-		.map(toError)
-		.filter(Boolean);
-
-	return errors;
-
-	function parseLine(line) {
-		const [, positions, message] = (line || '').split(';');
-		const [startRow, startPos, endRow, endPos, fileNumber] = (positions || '').split(',').map(Number);
-		return {
-			message,
-			startRow,
-			startPos,
-			endRow,
-			endPos,
-			fileNumber
-		};
-	}
-
-	function toError({ startRow, startPos, endRow, endPos, message }) {
-		if (!startRow || !startPos || !endRow || !endPos || !message) return;
-		return {
+function toDiagnosticErrors(fileName:string, errors: ASMInfoError[]): Diagnostic[] {
+	return errors.filter(({location}) => location.uri === fileName)
+		.map(({message, location }) =>  ({
 			severity: DiagnosticSeverity.Error,
-			range: {
-				start: Position.create(startRow - 1, startPos - 1),
-				end: Position.create(endRow - 1, endPos)
-			},
+			range: location.range,
 			message,
 			source: 'kickass-studio'
-		};
-	}
+		})
+	);
 }
 
 documents.listen(connection);

@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 
-interface IKickConfig {
+export interface IKickConfig {
 	outputDir: string;
 	kickAssJar: string;
 	javaBin: string;
