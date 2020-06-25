@@ -237,13 +237,36 @@ export class ASMInfoAnalizer {
 	getLabel(label: string): Location | undefined {
 		let location: Location | undefined;
 
+
+		if (!label.endsWith(':')) {
+			label += ':';
+		}
+
 		this.forEachFileInASMInfo(this.asmInfoByFile, (asminfo) => {
 			if (!location) {
-				location  = asminfo.syntax.label?.find(labelDef => labelDef.value === label +':')?.range;
+				location  = asminfo.syntax.label?.find(labelDef => labelDef.value === label)?.range;
 			}
 		});
 
 		return location;
+	}
+
+	getSymbolReferences(word: string): Location [] {
+		let locations: Location[] = [];
+
+		if (word.endsWith(':')) {
+			word = word.substring(0,word.length-1)
+		}
+
+		this.forEachFileInASMInfo(this.asmInfoByFile, (asminfo) => {
+			asminfo.syntax
+				.symbolReference?.filter(symbol => symbol.value === word)
+				.forEach(element => {
+					locations.push(element.range);
+				});
+		});
+
+		return locations;
 	}
 
 	getErrors(): ASMInfoError[] {
@@ -259,5 +282,10 @@ export class ASMInfoAnalizer {
 		const fileName = URI.parse(uri).fsPath;
 		return this.filesContents.getWordByPoint(fileName, pos);
 	}
+
+ 	hasFileBeenAnalized(uri: string): Boolean {
+		const fileName = URI.parse(uri).fsPath;
+		return Boolean(this.asmInfoByFile[fileName]);
+	 }
 
 }

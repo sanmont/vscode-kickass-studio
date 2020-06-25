@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 
-import { TextDocument, TextDocumentChangeEvent, Range, Location, DocumentUri } from 'vscode-languageclient';
+import { TextDocument, TextDocumentChangeEvent, Location } from 'vscode-languageclient';
 import {
 	createConnection,
 	Diagnostic,
@@ -13,6 +13,7 @@ import {
 } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { ASMInfoAnalizer, ASMInfoError } from './kickassASMInfo';
+import { getConfig } from '../helpers/extension';
 
 const documentSettings = new Map();
 
@@ -33,19 +34,48 @@ connection.onInitialize(({ capabilities }) => {
 	return {
 		capabilities: {
 			textDocumentSync: documents.syncKind,
-			definitionProvider: true
+			definitionProvider: true,
+			referencesProvider: true
 		}
 	};
+});
+
+connection.onReferences(async param => {
+	const  {textDocument, position, context} = param;
+/*
+	const mainFilename = getMainsourceFile();
+	if (ASMAnalizer.hasFileBeenAnalized(mainFilename)) {
+		await ASMAnalizer.analize(mainFilename, getConfig());
+	}
+*/
+	const word = ASMAnalizer.getWord(textDocument.uri, position);
+	if (!word) return null;
+
+	let locations: Location[] = []
+
+	if (context.includeDeclaration) {
+		const loc = ASMAnalizer.getLabel(word);
+
+		if (loc) {
+			locations.push(loc);
+		}
+	}
+
+	locations = locations.concat(ASMAnalizer.getSymbolReferences(word));
+
+	return locations;
 });
 
 connection.onDefinition(( {textDocument, position}) => {
 	const word = ASMAnalizer.getWord(textDocument.uri, position);
 	if (!word) return null;
+
 	const location = ASMAnalizer.getLabel(word);
 
 	if (location) {
 		return {uri: 'file://' + location.uri, range: location.range}
 	}
+
 	return null;
 });
 

@@ -1,7 +1,7 @@
 {
 	"name": "kickass-studio",
 	"displayName": "Kick Assembler Studio",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"publisher": "sanmont",
 	"description": "Kick Assembler visual studio code extension for creating and debugging C64 projects",
 	"author": {
@@ -23,10 +23,10 @@
 	"private": true,
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sanmont/vscode-kickass-c64-debug.git"
+		"url": "https://github.com/sanmont/vscode-kickass-studio.git"
 	},
 	"bugs": {
-		"url": "https://github.com/sanmont/vscode-kickass-c64-debug/issues"
+		"url": "https://github.com/sanmont/vscode-kickass-studio/issues"
 	},
 	"scripts": {
 		"prepublish": "tsc -p ./src",
