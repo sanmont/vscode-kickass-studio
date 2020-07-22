@@ -1,7 +1,9 @@
+import * as vscode from 'vscode';
+import { existsSync } from 'fs';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { changeExtension } from '../helpers/pathHelper';
-
+import { getConfig } from '../helpers/extension';
 
 export const ViceLauncherEvent = {
 	closed: 'closed'
@@ -16,7 +18,14 @@ export class ViceLauncher extends EventEmitter {
 			changeExtension(program, '.prg')
 		];
 
-		this.viceProcess = spawn('x64sc',args, {cwd});
+		let config = getConfig();
+		if(!existsSync(config.viceBin)) {
+			vscode.window.showErrorMessage("Vice not found. Check the extension configuration.");
+			this.sendEvent(ViceLauncherEvent.closed);
+			return;
+		}
+
+		this.viceProcess = spawn(config.viceBin ,args, {cwd});
 
 		this.viceProcess.stdout.on('data', (data) => {
 			console.log(`stdout: ${data}`);

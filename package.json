@@ -41,6 +41,7 @@
 	"dependencies": {
 		"await-notify": "1.0.1",
 		"fast-xml-parser": "3.16.0",
+		"lodash": "^4.17.19",
 		"unique-filename": "^1.1.1",
 		"vscode-debugadapter": "^1.39.1",
 		"vscode-languageclient": "^6.1.1",
