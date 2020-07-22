@@ -18,14 +18,16 @@ export class ViceLauncher extends EventEmitter {
 			changeExtension(program, '.prg')
 		];
 
+
 		let config = getConfig();
-		if(!existsSync(config.viceBin)) {
+		this.viceProcess = spawn(config.viceBin ,args, {cwd});
+
+		if(!this.viceProcess.pid) {
 			vscode.window.showErrorMessage("Vice not found. Check the extension configuration.");
 			this.sendEvent(ViceLauncherEvent.closed);
 			return;
 		}
 
-		this.viceProcess = spawn(config.viceBin ,args, {cwd});
 
 		this.viceProcess.stdout.on('data', (data) => {
 			console.log(`stdout: ${data}`);
