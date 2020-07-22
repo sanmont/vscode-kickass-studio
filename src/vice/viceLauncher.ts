@@ -21,6 +21,8 @@ export class ViceLauncher extends EventEmitter {
 		let config = getConfig();
 		if(!existsSync(config.viceBin)) {
 			vscode.window.showErrorMessage("Vice not found. Check the extension configuration.");
+			this.sendEvent(ViceLauncherEvent.closed);
+			return;
 		}
 
 		this.viceProcess = spawn(config.viceBin ,args, {cwd});
