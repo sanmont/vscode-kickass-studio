@@ -6,6 +6,9 @@ const WaitRetry = 500;
 const Retries = 100;
 import { Subject } from 'await-notify';
 import { queuableFunction } from '../helpers/asyncHelper';
+import { log } from '../helpers/log';
+
+let instance = 0;
 
 export class WaitingSocket {
 	private socket: Socket = new Socket({ readable: true, writable:true });
@@ -15,6 +18,8 @@ export class WaitingSocket {
 
 
     public constructor() {
+		instance ++;
+
 		this.socket.on('connect', this.onConnect.bind(this));
 		this.socket.on('close', this.onClose.bind(this));
 		this.socket.on('data', this.onData.bind(this));
@@ -22,6 +27,7 @@ export class WaitingSocket {
 		this.endBuffer = debounce(this.endBuffer, 100);
 
 		this.sendMessage = queuableFunction(this.sendMessage.bind(this));
+
 	}
 
 	private endBuffer(){
@@ -45,7 +51,7 @@ export class WaitingSocket {
 		if (!this.connected) {
 			console.log('Connection failed: timeout');
 		}
-    }
+	}
 
     private onData(data) {
 		this.buffer += data.toString();
@@ -65,17 +71,15 @@ export class WaitingSocket {
 		return this.event.message;
 	}
 
-
     public on = this.socket.on.bind(this.socket);
     public off = this.socket.off.bind(this.socket);
     public end = this.socket.end.bind(this.socket);
-
+    public destroy = this.socket.destroy.bind(this.socket);
 
 	private onConnect() {
 		this.connected = true;
 		console.log('Connected');
 	}
-
 
 	private onClose() {
 		this.connected = false;

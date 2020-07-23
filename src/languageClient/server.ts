@@ -13,7 +13,6 @@ import {
 } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { ASMInfoAnalizer, ASMInfoError } from './kickassASMInfo';
-import { getConfig } from '../helpers/extension';
 
 const documentSettings = new Map();
 
@@ -42,12 +41,6 @@ connection.onInitialize(({ capabilities }) => {
 
 connection.onReferences(async param => {
 	const  {textDocument, position, context} = param;
-/*
-	const mainFilename = getMainsourceFile();
-	if (ASMAnalizer.hasFileBeenAnalized(mainFilename)) {
-		await ASMAnalizer.analize(mainFilename, getConfig());
-	}
-*/
 	const word = ASMAnalizer.getWord(textDocument.uri, position);
 	if (!word) return null;
 

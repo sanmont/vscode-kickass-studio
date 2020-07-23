@@ -1,14 +1,11 @@
 import { EventEmitter } from 'events';
 import { WaitingSocket } from './waitingSocket';
+import { parseVariable, IVariableInfo, VariableFormat, addToMemoryAddress, derefferenceToAddress } from './viceVariableInfo';
 
 
 const CONNECTION_OPTS = { port: 6510 };
 const WaitRetry = 500;
 const Retries = 100;
-
-interface Response {
-	type: string;
-}
 
 interface Checkpoint {
 	id: string;
@@ -16,21 +13,14 @@ interface Checkpoint {
 	type: string;
 }
 
-interface BreakResponse extends Response {
-	id: number;
-	address: string;
-}
-
 export interface IRegister {
 	name: string;
 	value: string;
 }
 
-
 export const ViceInspectorEvent = {
 	stopped: 'stopped',
 };
-
 
 const stoppedOnBreakRE = /\#(\d+)\s\(Stop\son\s+exec\s+([0-f]{4})/i;
 const readyRE =  /^\([0-f]{4}\)$/i;
@@ -38,7 +28,32 @@ const stackTraceRE = /([0-f]{4})/gi;
 
 const checkpointRe = /(BREAK|TRACE|WATCH)\:\s+(\d+)\s+C\:(\$[0-f]{4})/gi;
 
-const memValRE = />C:[0-f]{4}\s+([0-f]{2})/gi;
+const memValRE = /( [0-f]{2})/gi;
+
+
+
+const formatValue = (value: string, varinfo: VariableFormat) => {
+	switch(varinfo) {
+		case VariableFormat.HEX:
+			return '$' + value;
+			break;
+		case VariableFormat.DEC:
+			return parseInt(value, 16);
+			break;
+		case VariableFormat.BIN:
+			return '%' + (parseInt(value, 16).toString(2).padStart(8,'0'));
+			break;
+	}
+};
+
+const parseVariableValue = (value: string, char: boolean = false) => {
+	if(!char) {
+		value = value.split('\n').map(c => c.substr(8, 52)).join('');
+		return [...(value as any).matchAll(memValRE)].map(a => a[0].trim());
+	} else {
+		return value.split('\n').map(c => c.substr(62)).join('');
+	}
+}
 
 export class ViceInspector extends EventEmitter {
 	private socket: WaitingSocket = new WaitingSocket();
@@ -50,7 +65,9 @@ export class ViceInspector extends EventEmitter {
 
 	public constructor() {
 		super();
-		this.socket.on('data', this.onData.bind(this));
+		this.onData = this.onData.bind(this);
+
+		this.socket.on('data', this.onData);
 		this.on(ViceInspectorEvent.stopped,() => {
 			this.flushQueue();
 			this._isRunning = false;
@@ -62,7 +79,12 @@ export class ViceInspector extends EventEmitter {
     }
 
 	public disconnect() {
+		this.flushQueue();
 		this.socket.end();
+		this.socket.off('data', this.onData);
+		this.socket.destroy();
+		this.socket = new WaitingSocket();
+		this.socket.on('data', this.onData);
 	}
 
 	private async sendViceMessage(mssg, inmediate = false, dontWaitForResult = false) {
@@ -149,14 +171,39 @@ export class ViceInspector extends EventEmitter {
 		return stackTrace;
 	}
 
-	public async readMemoryAddress(address) {
-		const res:string = (await this.sendViceMessage(`m ${address} ${address}`)).toString();
+	public async readMemory(variableName, labelsMap) {
+		let variable = parseVariable(variableName, labelsMap);
+
+		if (!variable) {
+			return "Unknown";
+		}
+
+		if (variable.directValue) {
+			return variable.from;
+		}
+
+		let derreferenceAddress = variable.from;
+
+		for (let i = 0; i < variable.derreference; i++) {
+			derreferenceAddress = (await this.sendViceMessage(`m ${derreferenceAddress} ${addToMemoryAddress(derreferenceAddress,1)}`)).toString();
+			derreferenceAddress = '$' + (parseVariableValue(derreferenceAddress) as any[]).reverse().join('')
+		}
+
+		if (variable.derreference) {
+			variable = derefferenceToAddress(variable, derreferenceAddress);
+		}
+
+		const res:string = (await this.sendViceMessage(`m ${variable.from} ${variable.to}`)).toString();
+
 		if (res.includes('ERROR')) {
 			throw new Error(res);
 		}
 
-		memValRE.exec('');
-		return (memValRE.exec(res) || {})[1];
+		if ((variable as IVariableInfo).format === VariableFormat.CHAR) {
+			return parseVariableValue(res, true);
+		}
+
+		return (parseVariableValue(res) as any[]).map(a => formatValue(a, (variable as IVariableInfo).format)).join(' ');
 	}
 
     private sendMessage = this.socket.sendMessage.bind(this.socket);
@@ -164,28 +211,9 @@ export class ViceInspector extends EventEmitter {
 	// --- private
 
 	private onData(data) {
-
-		let response = this.parseSocketData(data.toString());
-		switch(response.type) {
-			case 'breakpoint':
-				this.emit(ViceInspectorEvent.stopped);
-				this._isRunning = false;
-				break;
+		if (data.toString().includes("(Stop on exec)")) {
+			this.emit(ViceInspectorEvent.stopped);
 		}
-	}
-
-
-	// --- helpers
-	private parseSocketData(data:string): Response  {
-		if (stoppedOnBreakRE.test(data)) {
-			const matches = data.match(stoppedOnBreakRE) || [];
-			return <BreakResponse> {type:'breakpoint', id: parseInt(matches[1],10), address: matches[2]};
-		}
-
-		if (readyRE.test(data)) {
-			return {type: 'ready'};
-		}
-		return {type: 'unknown'};
 	}
 
 }

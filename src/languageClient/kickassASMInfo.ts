@@ -65,7 +65,7 @@ const generateASMString = async (fileUri: string, replacements: Map<string, stri
 		let output = '';
 		const proc = spawn(
 			javaBin,
-			['-jar',kickAssJar, fileName, '-asminfo', 'errors|files|syntax', '-noeval','-asminfofile', errorFilename].concat(replacementsArgs),
+			['-jar',kickAssJar, fileName, '-asminfo', 'allSourceSpecific', '-noeval','-asminfofile', errorFilename].concat(replacementsArgs),
 			{ cwd }
 		);
 

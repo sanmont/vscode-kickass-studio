@@ -39,7 +39,7 @@ const THREAD_ID = 0;
 export class KickAssemblerDebugSession extends DebugSession {
 	private viceLauncher: ViceLauncher;
 
-	private viceInspector = new ViceInspector();
+	private viceInspector: ViceInspector;
 
 	private configurationDone = new Subject();
 
@@ -56,6 +56,7 @@ export class KickAssemblerDebugSession extends DebugSession {
 		this.viceInspector = new ViceInspector();
 
 		this.viceLauncher.on(ViceLauncherEvent.closed, () => {
+			this.viceInspector.disconnect();
 			this.sendEvent(new TerminatedEvent());
 		});
 
@@ -220,7 +221,7 @@ export class KickAssemblerDebugSession extends DebugSession {
 		switch (args.context) {
 			case 'watch':
 				try {
-					const res = await this.viceInspector.readMemoryAddress(args.expression);
+					const res = await this.viceInspector.readMemory(args.expression, this.sourceMap.labelsMap);
 					body = {
 						result: res,
 						variablesReference: 0
