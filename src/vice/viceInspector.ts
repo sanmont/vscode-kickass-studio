@@ -43,6 +43,9 @@ const formatValue = (value: string, varinfo: VariableFormat) => {
 		case VariableFormat.BIN:
 			return '%' + (parseInt(value, 16).toString(2).padStart(8,'0'));
 			break;
+		case VariableFormat.BOOL:
+			return !(value === '00');
+			break;
 	}
 };
 
@@ -67,7 +70,7 @@ export class ViceInspector extends EventEmitter {
 		super();
 		this.onData = this.onData.bind(this);
 
-		this.socket.on('data', this.onData);
+		this.socket.on('received', this.onData);
 		this.on(ViceInspectorEvent.stopped,() => {
 			this.flushQueue();
 			this._isRunning = false;
@@ -81,10 +84,10 @@ export class ViceInspector extends EventEmitter {
 	public disconnect() {
 		this.flushQueue();
 		this.socket.end();
-		this.socket.off('data', this.onData);
+		this.socket.off('received', this.onData);
 		this.socket.destroy();
 		this.socket = new WaitingSocket();
-		this.socket.on('data', this.onData);
+		this.socket.on('received', this.onData);
 	}
 
 	private async sendViceMessage(mssg, inmediate = false, dontWaitForResult = false) {
@@ -136,7 +139,7 @@ export class ViceInspector extends EventEmitter {
     }
 
 	public async setBreakpoints(breakpoints:string[]) {
-		return await Promise.all(breakpoints.map(this.setBreakpoint.bind(this)));
+		await Promise.all(breakpoints.map(this.setBreakpoint.bind(this)));
 	}
 
 	public async getCheckpoints(): Promise<Checkpoint[]> {
@@ -156,7 +159,7 @@ export class ViceInspector extends EventEmitter {
 	}
 
 	public async deleteBreakpoint(id:string) {
-		return await this.sendViceMessage(`del ${id}`);
+		await this.sendViceMessage(`del ${id}`);
 	}
 
 	public async deleteBreakpoints(ids: string[] = []) {
@@ -211,7 +214,10 @@ export class ViceInspector extends EventEmitter {
 	// --- private
 
 	private onData(data) {
-		if (data.toString().includes("(Stop on exec)")) {
+		const response = data.toString();
+		console.log(response);
+
+		if (response.includes("Stop") && this.isRunning) {
 			this.emit(ViceInspectorEvent.stopped);
 		}
 	}

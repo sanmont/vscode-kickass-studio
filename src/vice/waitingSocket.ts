@@ -3,7 +3,7 @@ import { Socket } from 'net';
 
 const delay = timeout => new Promise(resolve => setTimeout(resolve, timeout));
 const WaitRetry = 500;
-const Retries = 100;
+const Retries = 10;
 import { Subject } from 'await-notify';
 import { queuableFunction } from '../helpers/asyncHelper';
 import { log } from '../helpers/log';
@@ -34,6 +34,7 @@ export class WaitingSocket {
 		this.event.message = this.buffer;
 		this.buffer = '';
 		this.event.notify();
+		this.socket.emit("received", this.event.message);
 	}
 
 	public async connect(opts) {
@@ -54,6 +55,10 @@ export class WaitingSocket {
 	}
 
     private onData(data) {
+		// console.log("Waiting socket: {");
+		// console.log("\t" + data.toString());
+		// console.log("}");
+
 		this.buffer += data.toString();
 		this.endBuffer();
     }

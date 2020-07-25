@@ -103,13 +103,14 @@ export class KickAssemblerDebugSession extends DebugSession {
 		} else {
 			(async () => {
 				this.viceInspector.flushQueue();
+				const running = this.viceInspector.isRunning;
 
 				const createdBps = (await this.viceInspector.getBreakpoints()).filter(ck => this.sourceMap.isFromFilename(ck.address, path));
 
 				await this.viceInspector.deleteBreakpoints(createdBps.map(bp => bp.id));
-				let res = await this.viceInspector.setBreakpoints(<[]>addresses);
+				await this.viceInspector.setBreakpoints(<[]>addresses);
 
-				if (this.viceInspector.isRunning) {
+				if (running) {
 					this.viceInspector.continue();
 				}
 

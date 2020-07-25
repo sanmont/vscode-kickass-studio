@@ -4,6 +4,7 @@ export enum VariableFormat {
 	DEC,
 	HEX,
 	BIN,
+	BOOL,
 	CHAR
 }
 
@@ -21,7 +22,7 @@ const memAddressRe = /\$[1-f]{4}/;
 const lengthRe = /.*\[(\d+)\]/gi;
 const withFormatRe = /\:(\w+)/;
 const wordRe =  /(\w+)/;
-const formatRe = /(h|d|b|c)\:/;
+const formatRe = /(h|d|b|c|l|bool)\:/i;
 const derreferenceRe = /^\*+/
 
 const parseLength = (varname) => {
@@ -78,17 +79,17 @@ export const derefferenceToAddress = (variable: IVariableInfo, derreferencedAddr
 const parseFormat = (variablename) => {
 	const match = variablename.match(formatRe);
 
-	const char = (match || [])[1];
+	const char = ((match || [])[1] || 'h').toLowerCase();
 
 	switch(char) {
 		case 'd':
-		case 'D':
 			return VariableFormat.DEC;
 		case 'b':
-		case 'B':
 			return VariableFormat.BIN;
+		case 'l':
+		case 'bool':
+			return VariableFormat.BOOL;
 		case 'c':
-		case 'C':
 			return VariableFormat.CHAR;
 		default:
 			return VariableFormat.HEX;
