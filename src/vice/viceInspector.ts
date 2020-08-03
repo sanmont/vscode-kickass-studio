@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { WaitingSocket } from './waitingSocket';
-import { parseVariable, IVariableInfo, VariableFormat, addToMemoryAddress, derefferenceToAddress } from './viceVariableInfo';
+import { parseVariable, IVariableInfo, VariableFormat, addToMemoryAddress, dereferenceToAddress } from './viceVariableInfo';
 
 
 const CONNECTION_OPTS = { port: 6510 };
@@ -193,7 +193,7 @@ export class ViceInspector extends EventEmitter {
 		}
 
 		if (variable.derreference) {
-			variable = derefferenceToAddress(variable, derreferenceAddress);
+			variable = dereferenceToAddress(variable, derreferenceAddress);
 		}
 
 		const res:string = (await this.sendViceMessage(`m ${variable.from} ${variable.to}`)).toString();

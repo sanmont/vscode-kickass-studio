@@ -180,11 +180,6 @@ const parseAsmInfoString = (str: string, contents: Map<string, string> ):Object 
 	return result;
 }
 
-export const getASMInfo = async (filename, replacements, settings): Promise<Object> => {
-	const asmInfoString = await generateASMString(filename, replacements, settings);
-	return parseAsmInfoString(asmInfoString, replacements);
-};
-
 export class ASMInfoAnalizer {
 	private filesContents: FilesContents = new FilesContents();
 	private asmInfoByFile: Object = {};

@@ -18,7 +18,7 @@ export interface IVariableInfo {
 	directValue?: boolean;
 }
 
-const memAddressRe = /\$[1-f]{4}/;
+const memAddressRe = /\$[0-f]{4}/;
 const lengthRe = /.*\[(\d+)\]/gi;
 const withFormatRe = /\:(\w+)/;
 const wordRe =  /(\w+)/;
@@ -59,7 +59,7 @@ export const addToMemoryAddress = (memoryAddress, val) => {
 	return '$' + address.toString(16).padStart(4, '0');
 };
 
-export const derefferenceToAddress = (variable: IVariableInfo, derreferencedAddress: string): IVariableInfo => {
+export const dereferenceToAddress = (variable: IVariableInfo, derreferencedAddress: string): IVariableInfo => {
 
 	const range = variable.range;
 	const from = derreferencedAddress;
