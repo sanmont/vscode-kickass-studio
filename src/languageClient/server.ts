@@ -1,8 +1,9 @@
 'use strict';
 
-import * as fs from 'fs';
+import * as path from 'path';
 
-import { TextDocument, TextDocumentChangeEvent, Location } from 'vscode-languageclient';
+import { Location, TextDocument, TextDocumentChangeEvent } from
+	'vscode-languageclient';
 import {
 	createConnection,
 	Diagnostic,
@@ -13,6 +14,7 @@ import {
 } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { ASMInfoAnalizer, ASMInfoError } from './kickassASMInfo';
+
 
 const documentSettings = new Map();
 
@@ -28,7 +30,6 @@ const ASMAnalizer = new ASMInfoAnalizer();
 connection.onInitialize(({ capabilities }) => {
 	console.log("on initialize");
 
-
 	hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration);
 	return {
 		capabilities: {
@@ -40,11 +41,11 @@ connection.onInitialize(({ capabilities }) => {
 });
 
 connection.onReferences(async param => {
-	const  {textDocument, position, context} = param;
+	const { textDocument, position, context } = param;
 	const word = ASMAnalizer.getWord(textDocument.uri, position);
 	if (!word) return null;
 
-	let locations: Location[] = []
+	let locations: Location[] = [];
 
 	if (context.includeDeclaration) {
 		const loc = ASMAnalizer.getLabel(word);
@@ -59,14 +60,14 @@ connection.onReferences(async param => {
 	return locations;
 });
 
-connection.onDefinition(( {textDocument, position}) => {
+connection.onDefinition(({ textDocument, position }) => {
 	const word = ASMAnalizer.getWord(textDocument.uri, position);
 	if (!word) return null;
 
 	const location = ASMAnalizer.getLabel(word);
 
 	if (location) {
-		return {uri: 'file://' + location.uri, range: location.range}
+		return { uri: 'file://' + location.uri, range: location.range };
 	}
 
 	return null;
@@ -104,7 +105,10 @@ function getDocumentSettings(resource) {
 	let result = documentSettings.get(resource);
 
 	if (!result) {
-		result = connection.workspace.getConfiguration({ scopeUri: resource, section: 'kickass-studio' });
+		result = connection.workspace.getConfiguration({
+			scopeUri:
+				resource, section: 'kickass-studio'
+		});
 		documentSettings.set(resource, result);
 	}
 
@@ -121,18 +125,22 @@ async function validateDocument(document: TextDocument) {
 	const errors = ASMAnalizer.getErrors();
 	const fileName = URI.parse(document.uri).fsPath;
 
-	connection.sendDiagnostics({ uri: document.uri, diagnostics: toDiagnosticErrors(fileName, errors) });
+	connection.sendDiagnostics({
+		uri: document.uri, diagnostics:
+			toDiagnosticErrors(fileName, errors)
+	});
 }
 
-function toDiagnosticErrors(fileName:string, errors: ASMInfoError[]): Diagnostic[] {
-	return errors.filter(({location}) => location.uri === fileName)
-		.map(({message, location }) =>  ({
+function toDiagnosticErrors(fileName: string, errors: ASMInfoError[]):
+	Diagnostic[] {
+	return errors.filter(({ location }) => !path.relative(location.uri, fileName))
+		.map(({ message, location }) => ({
 			severity: DiagnosticSeverity.Error,
 			range: location.range,
 			message,
 			source: 'kickass-studio'
 		})
-	);
+		);
 }
 
 documents.listen(connection);

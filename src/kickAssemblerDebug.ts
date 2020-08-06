@@ -90,6 +90,7 @@ export class KickAssemblerDebugSession extends DebugSession {
 				column: undefined
 			};
 			const bp = <DebugProtocol.Breakpoint>new Breakpoint(Boolean(column), l, column);
+			bp.verified = true;
 			return bp;
 		});
 

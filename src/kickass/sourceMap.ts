@@ -1,5 +1,7 @@
 import { parse } from 'fast-xml-parser';
 import { readFileSync } from 'fs';
+import * as path from 'path';
+
 
 export interface SourceLocation {
 	address: string;
@@ -44,6 +46,8 @@ const parseLabels = (labels: string): Object => {
 	}, {});
 };
 
+const isSameFile = (file1, file2) => !path.relative(file1,file2)
+
 export class SourceMap {
 	public memSourceLocation: Array<SourceLocation> = [];
 	public labelsMap = {};
@@ -71,13 +75,13 @@ export class SourceMap {
 		let i = 0;
 		for (; i < this.memSourceLocation.length; i++) {
 			const location = this.memSourceLocation[i];
-			if (location.filename === filename && location.line === line) break;
+			if (isSameFile(location.filename,filename) && location.line === line) break;
 		}
 
 		return this.memSourceLocation[i];
 	}
 
 	public isFromFilename(address: string, filename: string): boolean {
-		return this.getSourceLocation(address)?.filename === filename;
+		return isSameFile(this.getSourceLocation(address)?.filename, filename);
 	}
 }

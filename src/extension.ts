@@ -9,9 +9,16 @@ import { KickAssemblerDebugConfigurationProvider } from './providers/kickAssembl
 import { KickAssemblerTaskProvider } from './providers/kickAssemblerTaskProvider';
 import { getConfig } from './helpers/extension';
 import { existsSync } from 'fs';
+import { spawn } from 'child_process';
 
 export function activate(context: vscode.ExtensionContext) {
 	const config  = getConfig();
+
+	const proc = spawn(config.javaBin);
+	proc.on('error', (e) => {
+		vscode.window.showErrorMessage("Java not found. Check the extension configuration.");
+	})
+
 	if(!existsSync(config.kickAssJar)) {
 		vscode.window.showErrorMessage("Kick Assembler not found. Check the extension configuration.");
 	}
