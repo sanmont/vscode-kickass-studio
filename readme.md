@@ -34,7 +34,7 @@ You can watch the value of a particular memory address or label. The format can 
 - c:message[11] <- Will show 11 consecutive values in charactes or a string of length 11 if you will  starting from the lable 'message'
 - #message <- Will show the memory address of the label 'message'
 - \*c:pointerToMessage[11] <- Will use the memory address (2 bytes) in the label pointerToMessage (in litte endian, lower byte first, hight byte second, watch that value and format it as a string of length 11
-- \*\*pointerToPointer <- will apply the same indirection twice, so if pointerToPointer contains the memory address of pointerToMessage, and pointerToMessage contains the memory addres of message, this will show the content of message formated in a string of length 11
+- \*\*c:pointerToPointer[11] <- will apply the same indirection twice, so if pointerToPointer contains the memory address of pointerToMessage, and pointerToMessage contains the memory addres of message, this will show the content of message formated in a string of length 11
 
 *Types*
 - h: hexadecimal, the default type. Is not necessary to specify it
@@ -63,6 +63,6 @@ https://twitter.com/sanmonterodev
 Special thanks to Captain JiNX for his great vscode-kickass extension which code was partially used to develop this extension.
 (Used under MIT license)
 
-Check out his awesome extension! 
+Check out his awesome extension!
 
 https://github.com/CaptainJiNX/vscode-kickass-c64
