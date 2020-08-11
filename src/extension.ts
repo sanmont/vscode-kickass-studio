@@ -10,9 +10,14 @@ import { KickAssemblerTaskProvider } from './providers/kickAssemblerTaskProvider
 import { getConfig } from './helpers/extension';
 import { existsSync } from 'fs';
 import { spawn } from 'child_process';
+import { normalize } from 'path';
+
 
 export function activate(context: vscode.ExtensionContext) {
 	const config  = getConfig();
+	var a  = normalize('c:\\windows');
+	var b  = normalize('C:\\windows');
+
 
 	const proc = spawn(config.javaBin);
 	proc.on('error', (e) => {

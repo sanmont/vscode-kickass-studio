@@ -11,6 +11,7 @@ import {
 	DidChangeConfigurationNotification,
 	ProposedFeatures,
 	TextDocuments,
+	TextDocumentPositionParams,
 } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { ASMInfoAnalizer, ASMInfoError } from './kickassASMInfo';
@@ -64,10 +65,10 @@ connection.onDefinition(({ textDocument, position }) => {
 	const word = ASMAnalizer.getWord(textDocument.uri, position);
 	if (!word) return null;
 
-	const location = ASMAnalizer.getLabel(word);
+	const location = ASMAnalizer.getLabel(word) ;
 
 	if (location) {
-		return { uri: 'file://' + location.uri, range: location.range };
+		return { uri: location.uri, range: location.range };
 	}
 
 	return null;
@@ -123,17 +124,16 @@ async function validateDocument(document: TextDocument) {
 	await ASMAnalizer.analize(document, settings);
 
 	const errors = ASMAnalizer.getErrors();
-	const fileName = URI.parse(document.uri).fsPath;
 
 	connection.sendDiagnostics({
 		uri: document.uri, diagnostics:
-			toDiagnosticErrors(fileName, errors)
+			toDiagnosticErrors(document.uri, errors)
 	});
 }
 
-function toDiagnosticErrors(fileName: string, errors: ASMInfoError[]):
+function toDiagnosticErrors(uri: string, errors: ASMInfoError[]):
 	Diagnostic[] {
-	return errors.filter(({ location }) => !path.relative(location.uri, fileName))
+	return errors.filter(({ location }) => location.uri === uri)
 		.map(({ message, location }) => ({
 			severity: DiagnosticSeverity.Error,
 			range: location.range,

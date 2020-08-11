@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { normalize } from 'path';
 
 const oneLineCommentsRE = /\/\/.*/gi;
 const multiLineCommentsRE = /\/\*.*\*\//gms;
@@ -41,3 +42,12 @@ export const instantiateJSONfileObject = (f) => {
 
 export const isJSONFile = (f: string): boolean => path.extname(f) === '.json';
 
+
+export const normalizeWindowsPath = (p: string): string =>  {
+	p = normalize(p)
+	if (p.charAt(1) === ':') {
+		p = p[0].toLowerCase() + p.substr(1);
+	}
+
+	return p;
+}

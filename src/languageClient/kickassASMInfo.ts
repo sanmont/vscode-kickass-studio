@@ -9,7 +9,6 @@ import { URI } from 'vscode-uri';
 import { IKickConfig } from '../helpers/extension';
 import { FilesContents } from './fileContents';
 
-
 export interface ASMInfoError {
 	location: Location;
 	message: string;
@@ -62,11 +61,16 @@ const generateASMString = async (fileUri: string, replacements: Map<string, stri
 		const tempFile = uniqueFilename(os.tmpdir());
 		fs.writeFileSync(tempFile, content);
 		Array.prototype.push.apply(replacementsArgs, ['-replacefile',
-			replaceFilename, tempFile]);
+		URI.parse(replaceFilename).fsPath, tempFile]);
 	});
 
 	return await new Promise(resolve => {
 		let output = '';
+
+		var args = 	['-jar', kickAssJar, fileName, '-asminfo',
+		'allSourceSpecific', '-noeval', '-asminfofile',
+		errorFilename].concat(replacementsArgs);
+
 		const proc = spawn(
 			javaBin,
 			['-jar', kickAssJar, fileName, '-asminfo',
@@ -96,7 +100,7 @@ const generateASMString = async (fileUri: string, replacements: Map<string, stri
 };
 
 const parseFilesSection = (section: string) => {
-	return section.split(newLineSeparator).map(l => l.split(';')[1]);
+	return section.split(newLineSeparator).map(l => URI.file(l.split(';')[1]).toString());
 };
 
 const parseRange = (rangeString: string, files: string[]): Location => {
@@ -224,12 +228,8 @@ export class ASMInfoAnalizer {
 		});
 	}
 
-	useFilesystemContent(file: string): boolean {
-		return this.replacements.delete(file);
-	}
-
 	async analize(document: TextDocument, settings: IKickConfig): Promise<Object | null> {
-		const fileName = URI.parse(document.uri).fsPath;
+		const fileName = document.uri;
 
 		const content = document.getText();
 		this.replacements.set(fileName, content);
@@ -296,13 +296,11 @@ export class ASMInfoAnalizer {
 	}
 
 	getWord(uri: string, pos: Position): string | null {
-		const fileName = URI.parse(uri).fsPath;
-		return this.filesContents.getWordByPoint(fileName, pos);
+		return this.filesContents.getWordByPoint(uri, pos);
 	}
 
 	hasFileBeenAnalized(uri: string): Boolean {
-		const fileName = URI.parse(uri).fsPath;
-		return Boolean(this.asmInfoByFile[fileName]);
+		return Boolean(this.asmInfoByFile[uri]);
 	}
 
 }

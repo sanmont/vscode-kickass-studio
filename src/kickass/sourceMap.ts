@@ -10,6 +10,7 @@ export interface SourceLocation {
 	column: number;
 }
 
+// TODO: change filename to URI
 const parseSources = (sourceStr: string) => {
 	return sourceStr.split('\n').reduce((sources, curr) => {
 		const [id, filename] = curr.trim().split(',');
