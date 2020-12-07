@@ -10,6 +10,12 @@ export interface SourceLocation {
 	column: number;
 }
 
+
+// Normalize To an array:
+// If the metadata in the dbg file has only one element returns an array of that element. if its already an array,
+// it returns the array
+const normalizeToArray = (obj): any[] => Array.isArray(obj) ? obj : [obj];
+
 // TODO: change filename to URI
 const parseSources = (sourceStr: string) => {
 	return sourceStr.split('\n').reduce((sources, curr) => {
@@ -31,13 +37,23 @@ const parseBlock = (block: string, filesIndex): Array<SourceLocation> => {
 	});
 };
 
-const parseBlocks = (block: string | string[], filesIndex): Array<SourceLocation> => {
-	let blocks: string[] = Array.isArray(block) ? block : [block];
 
+const parseBlocks = (block: string | string[], filesIndex): Array<SourceLocation> => {
+	const blocks = normalizeToArray(block);
 	return blocks.reduce((map, currBlock) => {
 		return map.concat(parseBlock(currBlock, filesIndex));
 	}, [] as Array<SourceLocation>);
 };
+
+const parseSegments = (segment: any | any[], filesIndex): Array<SourceLocation> => {
+	const segments = normalizeToArray(segment);
+	return segments.reduce((map, currSegment) => {
+		if (!currSegment) {
+			return map;
+		}
+		return map.concat(parseBlocks(currSegment.Block as string, filesIndex));
+	}, [] as Array<SourceLocation>);
+}
 
 const parseLabels = (labels: string): Object => {
 	return labels.split('\n').reduce((labelsMap, curr) => {
@@ -53,11 +69,11 @@ export class SourceMap {
 	public memSourceLocation: Array<SourceLocation> = [];
 	public labelsMap = {};
 
-	public loadGDB(filename) {
+	public loadDBG(filename) {
 		const xmldata = readFileSync(filename);
 		const jsonObj = parse(xmldata.toString());
 		const filesIndex = parseSources(jsonObj.C64debugger.Sources);
-		this.memSourceLocation = parseBlocks(jsonObj.C64debugger.Segment.Block, filesIndex);
+		this.memSourceLocation = parseSegments(jsonObj.C64debugger.Segment, filesIndex);
 		this.labelsMap = parseLabels(jsonObj.C64debugger.Labels);
 	}
 
