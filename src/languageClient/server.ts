@@ -2,7 +2,7 @@
 
 import * as path from 'path';
 
-import { Location, TextDocument, TextDocumentChangeEvent } from
+import { Location } from
 	'vscode-languageclient';
 import {
 	createConnection,
@@ -12,6 +12,10 @@ import {
 	ProposedFeatures,
 	TextDocuments,
 	TextDocumentPositionParams,
+	TextDocumentChangeEvent,
+	TextDocument,
+	CancellationToken,
+	Hover,
 } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { ASMInfoAnalizer, ASMInfoError } from './kickassASMInfo';

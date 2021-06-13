@@ -237,9 +237,8 @@ export class KickAssemblerDebugSession extends DebugSession {
 					response.message = args.expression;
 				}
 				break;
-			case 'repl': // debug console
-				break;
 			case 'hover': // on hovers
+			case 'repl': // debug console
 				break;
 		}
 		response.body = body;
