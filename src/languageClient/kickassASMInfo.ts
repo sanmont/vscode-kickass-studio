@@ -26,6 +26,8 @@ export interface ASMToken {
 	value: string | null;
 }
 
+
+
 export interface ASMInfoSyntax {
 	comment?: ASMToken[];
 	directive?: ASMToken[];
@@ -41,10 +43,22 @@ export interface ASMInfoSyntax {
 export interface ASMInfo { // Cambiarla a clase
 	errors: ASMInfoErrors;
 	syntax: ASMInfoSyntax;
+	definitions?: Map<string, ASMToken>;
+}
+
+interface constAssigment {
+	name: string;
+	value: string;
 }
 
 
-const newLineSeparator = /\r?\n/gi;
+const newLineSeparatorRE = /\r?\n/gi;
+const constAssignmentRE = /[\w|\"]+/gi
+
+const getConstAssignment = (assignment: string): constAssigment  =>{
+	const array = [...assignment.matchAll(constAssignmentRE)];
+	return { name: array[0].toString(), value: array[1].toString()};
+}
 
 const generateASMString = async (fileUri: string, replacements: Map<string, string>, { kickAssJar, javaBin }): Promise<string> => {
 	const fileName = URI.parse(fileUri).fsPath;
@@ -100,7 +114,7 @@ const generateASMString = async (fileUri: string, replacements: Map<string, stri
 };
 
 const parseFilesSection = (section: string) => {
-	return section.split(newLineSeparator).map(l => URI.file(l.split(';')[1]).toString());
+	return section.split(newLineSeparatorRE).map(l => URI.file(l.split(';')[1]).toString());
 };
 
 const parseRange = (rangeString: string, files: string[]): Location => {
@@ -123,8 +137,7 @@ const parseRange = (rangeString: string, files: string[]): Location => {
 };
 
 const parseSyntaxSection = (section: string, files: string[]): Map<string, ASMInfoSyntax> => {
-	return section.split(newLineSeparator).reduce((res: Map<string,
-		ASMInfoSyntax>, line: string) => {
+	return section.split(newLineSeparatorRE).reduce((res: Map<string, ASMInfoSyntax>, line: string) => {
 		const [type, rangeAndFile] = line.split(';');
 		const range = parseRange(rangeAndFile, files);
 
@@ -151,7 +164,7 @@ const parseErrorsSection = (section: string, files: string[]):Map<string, ASMInf
 
 	if (!section) return res;
 
-	return section.split(newLineSeparator).reduce((dict: Map<string, ASMInfoErrors>, line: string) => {
+	return section.split(newLineSeparatorRE).reduce((dict: Map<string, ASMInfoErrors>, line: string) => {
 		const [type, rangeAndFile, message] = line.split(';');
 
 		const range = parseRange(rangeAndFile, files);
@@ -192,7 +205,8 @@ const parseAsmInfoString = (str: string, contents: Map<string, string>): Object 
 	files.forEach(file => {
 		result[file] = {
 			syntax: syntax.get(file),
-			errors: errors.get(file)
+			errors: errors.get(file),
+			definitions: new Map<string, ASMToken>()
 		};
 	});
 
@@ -219,7 +233,7 @@ export class ASMInfoAnalizer {
 	}
 
 	private setSyntaxValues(asmInfoByFile): void {
-		this.forEachFileInASMInfo(asmInfoByFile, asmInfo => {
+		this.forEachFileInASMInfo(asmInfoByFile, (asmInfo) => {
 			this.forEachSyntaxType(asmInfo, (tokens) => {
 				tokens.forEach((token: ASMToken) => {
 					token.value = this.filesContents.getWord(token.range);
@@ -228,6 +242,26 @@ export class ASMInfoAnalizer {
 		});
 	}
 
+	private setDefinitions(asmInfoByFile): void {
+		this.forEachFileInASMInfo(asmInfoByFile, (asmInfo: ASMInfo) => {
+			if (asmInfo.syntax.directive) {
+				asmInfo.syntax.directive.forEach((directiveToken) => {
+					const word = this.filesContents.getWord(directiveToken.range);
+					if (word === '.const') {
+						const rest = this.filesContents.getLineEnder(directiveToken.range);
+						const constAssigment = getConstAssignment(rest || "");
+						asmInfo.definitions?.set(constAssigment.name, { range: directiveToken.range, value: constAssigment.value });
+					}
+				});
+			};
+
+			if (asmInfo.syntax.label) {
+				asmInfo.syntax.label.forEach(label => {
+					asmInfo.definitions?.set(label.value as string, label);
+				})
+			}
+		});
+	}
 	async analize(document: TextDocument, settings: IKickConfig): Promise<Object | null> {
 		const fileName = document.uri;
 
@@ -245,6 +279,7 @@ export class ASMInfoAnalizer {
 
 		this.filesContents.loadFileContent(fileName, content);
 		this.setSyntaxValues(newInfo);
+		this.setDefinitions(newInfo);
 
 		this.asmInfoByFile = { ...this.asmInfoByFile, ...newInfo };
 		return null;
@@ -260,13 +295,26 @@ export class ASMInfoAnalizer {
 
 		this.forEachFileInASMInfo(this.asmInfoByFile, (asminfo) => {
 			if (!location) {
-				location = asminfo.syntax.label?.find(labelDef =>
-					labelDef.value === label)?.range;
+				location = asminfo.definitions?.get(label)?.range;
 			}
 		});
 
 		return location;
 	}
+
+	getDefinition(word: string): Location | undefined {
+		let location: Location | undefined;
+
+
+		this.forEachFileInASMInfo(this.asmInfoByFile, (asminfo) => {
+			if (!location) {
+				location = asminfo.definitions?.get(word)?.range;
+			}
+		});
+
+		return location;
+	}
+
 
 	getSymbolReferences(word: string): Location[] {
 		let locations: Location[] = [];

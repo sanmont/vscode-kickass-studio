@@ -71,6 +71,7 @@ export class KickAssemblerDebugSession extends DebugSession {
 		response.body.supportsConfigurationDoneRequest = true;
 		response.body.supportTerminateDebuggee = true;
 		response.body.supportsSetVariable = true;
+		response.body.supportsEvaluateForHovers = true;
 
 		this.sendResponse(response);
 

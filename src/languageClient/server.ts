@@ -36,7 +36,7 @@ connection.onInitialize(({ capabilities }) => {
 		capabilities: {
 			textDocumentSync: documents.syncKind,
 			definitionProvider: true,
-			referencesProvider: true
+			referencesProvider: true,
 		}
 	};
 });
@@ -65,7 +65,7 @@ connection.onDefinition(({ textDocument, position }) => {
 	const word = ASMAnalizer.getWord(textDocument.uri, position);
 	if (!word) return null;
 
-	const location = ASMAnalizer.getLabel(word) ;
+	const location = ASMAnalizer.getLabel(word) || ASMAnalizer.getDefinition(word);
 
 	if (location) {
 		return { uri: location.uri, range: location.range };
@@ -73,6 +73,8 @@ connection.onDefinition(({ textDocument, position }) => {
 
 	return null;
 });
+
+connection.onCodeLens
 
 connection.onInitialized(() => {
 	if (hasConfigurationCapability) {

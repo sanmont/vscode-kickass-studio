@@ -1,9 +1,10 @@
 
-import { Location, Position } from 'vscode-languageclient';
+import { Position } from 'vscode-languageclient';
 import * as fs from 'fs';
 import { normalizeWindowsPath } from '../helpers/pathHelper';
 import { off } from 'process';
 import { URI } from 'vscode-uri';
+import { Location } from 'vscode-languageserver';
 
 
 const wordRe = /(\w+)/gm;
@@ -43,25 +44,28 @@ export class FilesContents {
 		}
 	}
 
-	getWord(location: Location): string | null {
-		const file = location.uri;
 
-		if(!this.newLinesIndexes.has(file)) {
-			this.loadFileContent(file);
+	getNewLineIndexes(filename: string): number[] {
+		if(!this.newLinesIndexes.has(filename)) {
+			this.loadFileContent(filename);
 		}
 
-		if(!this.newLinesIndexes.has(file)) {
-			return null;
+		if(!this.newLinesIndexes.has(filename)) {
+			return [];
 		}
 
-		const range = location.range;
-		const lines =  <number[]> this.newLinesIndexes.get(file) || [];
+
+		return this.newLinesIndexes.get(filename) as number[];
+	}
+
+	getWord({uri, range}: Location): string | null {
+		const lines = this.getNewLineIndexes(uri);
 
 		if (lines.length <= range.start.line) {
 			return null;
 		}
 
-		const content = <string>this.content.get(file) || '';
+		const content = <string>this.content.get(uri) || '';
 
 		const start = lines[range.start.line] + range.start.character;
 		const end =  lines[range.end.line] + range.end.character || content.length;
@@ -70,15 +74,8 @@ export class FilesContents {
 	}
 
 	getWordByPoint(uri: string, position: Position): string | null {
-		if(!this.newLinesIndexes.has(uri)) {
-			this.loadFileContent(uri);
-		}
+		const lines = this.getNewLineIndexes(uri);
 
-		if(!this.newLinesIndexes.has(uri)) {
-			return null;
-		}
-
-		const lines =  <number[]> this.newLinesIndexes.get(uri) || [];
 		if (lines.length <= position.line) {
 			return null;
 		}
@@ -96,5 +93,23 @@ export class FilesContents {
 
 		return !match ? null: match[0];
 	}
+
+
+	getLineEnder({uri, range}: Location): string | null{
+		const lines = this.getNewLineIndexes(uri);
+
+		if (lines.length <= range.end.line) {
+			return null;
+		}
+
+		const content = <string>this.content.get(uri) || '';
+
+		const start = lines[range.end.line] + range.end.character;
+		const end =  ((lines[range.end.line + 1] || 1) - 1) || content.length;
+
+		return content.substring(start, end);
+
+	}
+
 
 };
