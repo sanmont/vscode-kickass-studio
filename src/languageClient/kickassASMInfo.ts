@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as uniqueFilename from 'unique-filename';
-import { DocumentUri, Location, Position, Range, TextDocument } from
-	'vscode-languageclient';
+import { DocumentUri } from 'vscode-languageclient';
+import { Range, Location, TextDocument, Position } from  'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { IKickConfig } from '../helpers/extension';
 import { FilesContents } from './fileContents';
@@ -53,7 +53,7 @@ const generateASMString = async (fileUri: string, replacements: Map<string, stri
 	// tslint:disable-next-line: no-require-imports
 	const errorFilename = uniqueFilename(os.tmpdir());
 	const tempFile = uniqueFilename(os.tmpdir());
-	fs.writeFileSync(tempFile, replacements);
+	fs.writeFileSync(tempFile, replacements.get(fileUri));
 
 	const replacementsArgs = [];
 

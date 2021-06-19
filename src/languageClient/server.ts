@@ -11,13 +11,9 @@ import {
 	DidChangeConfigurationNotification,
 	ProposedFeatures,
 	TextDocuments,
-	TextDocumentPositionParams,
 	TextDocumentChangeEvent,
 	TextDocument,
-	CancellationToken,
-	Hover,
 } from 'vscode-languageserver';
-import { URI } from 'vscode-uri';
 import { ASMInfoAnalizer, ASMInfoError } from './kickassASMInfo';
 
 
@@ -135,16 +131,17 @@ async function validateDocument(document: TextDocument) {
 	});
 }
 
-function toDiagnosticErrors(uri: string, errors: ASMInfoError[]):
-	Diagnostic[] {
+function toDiagnosticErrors(uri: string, errors: ASMInfoError[]): Diagnostic[] {
 	return errors.filter(({ location }) => location.uri === uri)
-		.map(({ message, location }) => ({
-			severity: DiagnosticSeverity.Error,
-			range: location.range,
-			message,
-			source: 'kickass-studio'
-		})
-		);
+		.map(({ message, location }) =>
+			Diagnostic.create(
+				location.range,
+				message,
+				DiagnosticSeverity.Error,
+				undefined,
+				'kickass-studio'
+				)
+			);
 }
 
 documents.listen(connection);
