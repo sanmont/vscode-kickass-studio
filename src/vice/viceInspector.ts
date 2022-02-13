@@ -20,6 +20,7 @@ export interface IRegister {
 
 export const ViceInspectorEvent = {
 	stopped: 'stopped',
+	timeoutDisconnect: 'timeoutDisconnect'
 };
 
 const stoppedOnBreakRE = /\#(\d+)\s\(Stop\son\s+exec\s+([0-f]{4})/i;
@@ -71,6 +72,8 @@ export class ViceInspector extends EventEmitter {
 		this.onData = this.onData.bind(this);
 
 		this.socket.on('received', this.onData);
+		this.socket.on('timeout', this.onTimeout);
+
 		this.on(ViceInspectorEvent.stopped,() => {
 			this.flushQueue();
 			this._isRunning = false;
@@ -88,6 +91,7 @@ export class ViceInspector extends EventEmitter {
 		this.socket.destroy();
 		this.socket = new WaitingSocket();
 		this.socket.on('received', this.onData);
+		this.socket.on('timeout', this.onTimeout);
 	}
 
 	private async sendViceMessage(mssg, inmediate = false, dontWaitForResult = false) {
@@ -126,6 +130,11 @@ export class ViceInspector extends EventEmitter {
 		this._isRunning = true;
 		return await this.sendViceMessage('g', true, true);
 	}
+
+	public async quit() {
+		return await this.sendViceMessage('quit', true, true);
+	}
+
 
 	public async registers(): Promise<IRegister[]> {
 		let res = (await this.sendViceMessage('registers')).split('\n');
@@ -208,6 +217,11 @@ export class ViceInspector extends EventEmitter {
 
 		return (parseVariableValue(res) as any[]).map(a => formatValue(a, (variable as IVariableInfo).format)).join(' ');
 	}
+
+	private onTimeout() {
+		this.emit(ViceInspectorEvent.timeoutDisconnect);
+	}
+
 
     private sendMessage = this.socket.sendMessage.bind(this.socket);
 

@@ -64,6 +64,10 @@ export class KickAssemblerDebugSession extends DebugSession {
 		this.viceInspector.on(ViceInspectorEvent.stopped, () => {
 			this.sendEvent(new StoppedEvent('stopped', THREAD_ID));
 		});
+
+		this.viceInspector.on(ViceInspectorEvent.timeoutDisconnect, () => {
+			this.viceLauncher.close();
+		});
 	}
 
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
@@ -253,6 +257,7 @@ export class KickAssemblerDebugSession extends DebugSession {
 	}
 
 	protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, request?: DebugProtocol.Request): void {
+		this.viceInspector.quit();
 		this.viceInspector.disconnect();
 		this.viceLauncher.close();
 		this.sendResponse(response);

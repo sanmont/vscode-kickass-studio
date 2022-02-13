@@ -3,7 +3,7 @@ import { Socket } from 'net';
 
 const delay = timeout => new Promise(resolve => setTimeout(resolve, timeout));
 const WaitRetry = 500;
-const Retries = 10;
+const Retries = 100;
 import { Subject } from 'await-notify';
 import { queuableFunction } from '../helpers/asyncHelper';
 import { log } from '../helpers/log';
@@ -45,12 +45,16 @@ export class WaitingSocket {
 
 			if (this.connected) {
 				console.log('Retrying connect');
+			} else {
+				console.log('Trying to connect');
 			}
+
 			await delay(WaitRetry);
 		}
 
 		if (!this.connected) {
 			console.log('Connection failed: timeout');
+			this.socket.emit("timeout");
 		}
 	}
 

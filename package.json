@@ -13,7 +13,7 @@
 		"c64 assembler kick kickassm kickasss studio"
 	],
 	"engines": {
-		"vscode": "1.57.0"
+		"vscode": "^1.57.0"
 	},
 	"icon": "images/icon.png",
 	"categories": [
@@ -103,7 +103,9 @@
 		"debuggers": [
 			{
 				"type": "kickassembler",
-				"languages": ["kickassembler"],
+				"languages": [
+					"kickassembler"
+				],
 				"label": "Kick assembler studio",
 				"program": "./out/debugAdapter.js",
 				"runtime": "node",
