@@ -3,7 +3,6 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { changeExtension } from '../helpers/pathHelper';
 import { getConfig } from '../helpers/extension';
-import * as ps from 'ps-node';
 
 export const ViceLauncherEvent = {
 	closed: 'closed'
@@ -20,24 +19,6 @@ export class ViceLauncher extends EventEmitter {
 			'-remotemonitoraddress', '127.0.0.1:6510',
 			changeExtension(program, '.prg')
 		];
-
-
-		// A simple pid lookup
-		ps.lookup({
-			command: config.viceBin,
-			}, function(err, resultList ) {
-			if (err) {
-				throw new Error( err );
-			}
-
-			resultList.forEach(function( process ){
-				if( process ){
-
-					console.log( 'PID: %s, COMMAND: %s, ARGUMENTS: %s', process.pid, process.command, process.arguments );
-				}
-			});
-		});
-
 
 		this.viceProcess = spawn(config.viceBin ,args, {cwd});
 
