@@ -21,9 +21,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
 	const proc = spawn(config.javaBin);
+	proc.stdout.on('data', () => {
+		proc.kill();
+	});
+
 	proc.on('error', (e) => {
 		vscode.window.showErrorMessage("Java not found. Check the extension configuration.");
-	})
+	});
 
 	if(!existsSync(config.kickAssJar)) {
 		await vscode.window.showErrorMessage("Kick Assembler not found. Select kickass.jar.");
@@ -34,6 +38,24 @@ export async function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Change the configuration manually');
 		}
 	}
+
+
+	const viceProc = spawn(config.viceBin);
+
+	viceProc.on('error', async (e) => {
+		await vscode.window.showErrorMessage("Vice not found. Select executable vice file.");
+		const selected = await vscode.window.showOpenDialog();
+		if (selected) {
+			config.update('viceBin', selected[0].fsPath , vscode.ConfigurationTarget.Global);
+		} else {
+			vscode.window.showInformationMessage('Change the configuration manually');
+		}
+	})
+
+	viceProc.stdout.on('data', () => {
+		viceProc.kill();
+	})
+
 
 	const client = LanguageClient.create(context);
 	client.start();

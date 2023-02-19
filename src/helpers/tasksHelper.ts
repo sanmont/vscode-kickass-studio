@@ -47,7 +47,7 @@ export const createBuildTask = (f: string, name?) => {
 
 	const file = !f.startsWith('${') ? path.relative(cwd , f) : f;
 	const args = ['-jar', config.kickAssJar,
-				'-odir', config.outputDir,
+				'-odir', path.join(cwd, config.outputDir),
 				'-log', 'buildlog.txt',
 				'-showmem', '-debugdump', '-vicesymbols',
 				file] ;
