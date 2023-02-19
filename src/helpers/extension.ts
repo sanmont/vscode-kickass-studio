@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 
-export interface IKickConfig {
+export interface IKickConfig extends vscode.WorkspaceConfiguration {
 	outputDir: string;
 	kickAssJar: string;
 	javaBin: string;
@@ -12,4 +12,4 @@ export interface IKickConfig {
 	emptyBinFolderBeforeBuild: string;
  }
 
-export const getConfig = (): IKickConfig => <IKickConfig> <unknown> vscode.workspace.getConfiguration('kickass-studio');
+export const getConfig = (): IKickConfig => vscode.workspace.getConfiguration('kickass-studio') as IKickConfig;

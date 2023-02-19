@@ -11,9 +11,10 @@ import { getConfig } from './helpers/extension';
 import { existsSync } from 'fs';
 import { spawn } from 'child_process';
 import { normalize } from 'path';
+import { URI } from 'vscode-uri';
 
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 	const config  = getConfig();
 	var a  = normalize('c:\\windows');
 	var b  = normalize('C:\\windows');
@@ -25,7 +26,13 @@ export function activate(context: vscode.ExtensionContext) {
 	})
 
 	if(!existsSync(config.kickAssJar)) {
-		vscode.window.showErrorMessage("Kick Assembler not found. Check the extension configuration.");
+		await vscode.window.showErrorMessage("Kick Assembler not found. Select kickass.jar.");
+		const selected = await vscode.window.showOpenDialog({filters: {"Java archive (JAR) ": ['jar']}});
+		if (selected) {
+			config.update('kickAssJar', selected[0].fsPath , vscode.ConfigurationTarget.Global);
+		} else {
+			vscode.window.showInformationMessage('Change the configuration manually');
+		}
 	}
 
 	const client = LanguageClient.create(context);
