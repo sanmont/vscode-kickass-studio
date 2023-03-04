@@ -2,8 +2,6 @@ import { EventEmitter } from 'events';
 import { WaitingSocket } from './waitingSocket';
 import { parseVariable, IVariableInfo, VariableFormat, addToMemoryAddress, dereferenceToAddress } from './viceVariableInfo';
 
-
-const CONNECTION_OPTS = { port: 6510 };
 const WaitRetry = 500;
 const Retries = 100;
 
@@ -80,8 +78,8 @@ export class ViceInspector extends EventEmitter {
 		});
 	}
 
-    public async connect() {
-		await this.socket.connect(CONNECTION_OPTS);
+    public async connect(port) {
+		await this.socket.connect({port});
     }
 
 	public disconnect() {

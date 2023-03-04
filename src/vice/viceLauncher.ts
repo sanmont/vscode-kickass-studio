@@ -11,12 +11,12 @@ export const ViceLauncherEvent = {
 export class ViceLauncher extends EventEmitter {
 	private viceProcess: ChildProcessWithoutNullStreams;
 
-	public launch(program: string, cwd: string) {
+	public launch(program: string, cwd: string, port: string) {
 		let config = getConfig();
 
 		const args = ['-remotemonitor', '-logfile', changeExtension(program, '-vice.log') ,
 			'-moncommands',  changeExtension(program, '.vs'),
-			'-remotemonitoraddress', '127.0.0.1:6510',
+			'-remotemonitoraddress', '127.0.0.1:' + port,
 			changeExtension(program, '.prg')
 		];
 

@@ -21,6 +21,8 @@ import { ViceLauncher, ViceLauncherEvent } from './vice/viceLauncher';
 
 import { Subject } from 'await-notify';
 import { guessDBGFile } from './helpers/filesLocationsHelper';
+const random_port = require('random-port');
+
 
 const Scopes = {
 	Registers: 1,
@@ -135,8 +137,10 @@ export class KickAssemblerDebugSession extends DebugSession {
 		// Uses the name of the found .dbg file as program location,
 		// in case the output .prg changed inside the sourcecode
 		this.viceInitializer.saveVSFile(changeExtension(dbgFile, '.vs', args.binDirectory));
-		this.viceInspector.connect();
-		this.viceLauncher.launch(dbgFile, args.binDirectory);
+
+		const port = await new Promise<string>((resolve) => random_port(resolve));
+		this.viceInspector.connect(port);
+		this.viceLauncher.launch(dbgFile, args.binDirectory, port);
 		this.sendResponse(response);
 	}
 
